@@ -42,7 +42,6 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     room_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
-    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(room_id, user_id)
   );
   CREATE TABLE IF NOT EXISTS messages (
@@ -54,12 +53,10 @@ db.exec(`
   );
   CREATE TABLE IF NOT EXISTS giveaway (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER UNIQUE NOT NULL,
-    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    user_id INTEGER UNIQUE NOT NULL
   );
   CREATE TABLE IF NOT EXISTS matchmaking_queue (
-    user_id INTEGER PRIMARY KEY,
-    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    user_id INTEGER PRIMARY KEY
   );
 `);
 
@@ -132,13 +129,6 @@ app.post('/api/login', (req, res) => {
 
 app.get('/api/profile', authMiddleware, (req, res) => {
   res.json({ success: true, user: req.user });
-});
-
-app.put('/api/profile', authMiddleware, (req, res) => {
-  const { valorant_id, rank, role } = req.body;
-  db.prepare('UPDATE users SET valorant_id = ?, rank = ?, role = ? WHERE id = ?')
-    .run(valorant_id, rank, role, req.user.id);
-  res.json({ success: true });
 });
 
 // ROOMS
@@ -228,7 +218,7 @@ app.post('/api/matchmaking/join', authMiddleware, (req, res) => {
     db.prepare('INSERT INTO matchmaking_queue (user_id) VALUES (?)').run(req.user.id);
   }
   
-  const queue = db.prepare('SELECT u.id, u.username, u.rank, u.role FROM matchmaking_queue mq JOIN users u ON mq.user_id = u.id WHERE u.is_banned = 0 ORDER BY mq.joined_at LIMIT 5').all();
+  const queue = db.prepare('SELECT u.id, u.username, u.rank, u.role FROM matchmaking_queue mq JOIN users u ON mq.user_id = u.id WHERE u.is_banned = 0 ORDER BY mq.user_id LIMIT 5').all();
   
   if (queue.length === 5) {
     const ids = queue.map(u => u.id);
@@ -262,7 +252,7 @@ app.delete('/api/admin/rooms/:id', authMiddleware, adminMiddleware, (req, res) =
 });
 
 app.get('/api/admin/users', authMiddleware, adminMiddleware, (req, res) => {
-  const users = db.prepare('SELECT id, username, valorant_id, rank, role, is_admin, is_banned, ban_reason, created_at FROM users ORDER BY created_at DESC').all();
+  const users = db.prepare('SELECT id, username, valorant_id, rank, role, is_admin, is_banned, ban_reason FROM users ORDER BY id DESC').all();
   res.json({ success: true, users });
 });
 
