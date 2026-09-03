@@ -3,6 +3,7 @@ let currentUser = null;
 let selectedAgents = [];
 let matchmakingInterval = null;
 let countdownIntervals = {};
+let allUsers = [];
 
 const AGENTS = [
   { name: "Jett", img: "https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/displayicon.png" },
@@ -80,12 +81,12 @@ function switchPage(pageId) {
   if (pageId === 'rooms') loadRooms();
   if (pageId === 'profile') loadProfile();
   if (pageId === 'giveaway') loadGiveawayParticipants();
-  if (pageId === 'admin') { loadAdminRooms(); loadAdminUsers(); }
-  if (pageId === 'home') loadHomeGiveawayParticipants();
+  if (pageId === 'admin') { if (currentUser?.is_admin) loadAdminDashboard(); }
+  if (pageId === 'home') { loadHomeGiveawayParticipants(); loadAds(); }
 }
 
 function toggleMobileMenu() {
-  const navLinks = document.querySelector('.nav-links');
+  const navLinks = document.getElementById('nav-links');
   if (navLinks) navLinks.classList.toggle('active');
 }
 
@@ -104,6 +105,8 @@ async function checkAuthState() {
       showLoggedOut();
     }
   } catch (e) { showLoggedOut(); }
+  loadSiteSettings();
+  loadAds();
 }
 
 function showLoggedIn() {
@@ -147,13 +150,11 @@ async function register() {
   const role = document.getElementById('reg-role').value;
   const password = document.getElementById('reg-pass').value;
   const passwordConfirm = document.getElementById('reg-pass2').value;
-
   if (!username || !valName || !valTag || !password) { alert('Tüm alanları doldurun!'); return; }
   const data = await fetch(API_URL + '/register', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, valName, valTag, rank, role, password, passwordConfirm })
   }).then(r => r.json());
-
   if (data.success) {
     alert(`✅ Kayıt başarılı!\nKullanıcı adınız: ${data.username}\n\nHediye: 100 SmokGG Puanı ve 1 Çekiliş Biletiniz hesabınıza tanımlandı!`);
     switchPage('login');
@@ -166,12 +167,10 @@ async function login() {
   const username = document.getElementById('login-user').value.trim();
   const password = document.getElementById('login-pass').value;
   if (!username || !password) { alert('Kullanıcı adı ve şifre gerekli!'); return; }
-
   const data = await fetch(API_URL + '/login', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
   }).then(r => r.json());
-
   if (data.success) {
     setToken(data.token);
     currentUser = data.user;
@@ -217,11 +216,9 @@ async function loadRooms() {
   const container = document.getElementById('rooms-list');
   if (!container) return;
   if (!data.success || !data.rooms) { container.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:40px;">Yüklenemedi</p>'; return; }
-
   const filter = document.getElementById('room-filter')?.value || 'all';
   let rooms = data.rooms;
   if (filter !== 'all') rooms = rooms.filter(r => r.owner_role === filter);
-
   if (rooms.length === 0) {
     container.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:40px;">Henüz ilan yok. İlk ilan sen oluştur!</p>';
     return;
@@ -233,22 +230,17 @@ function renderRoomCard(room) {
   const isOwner = currentUser && room.user_id === currentUser.id;
   const isAdmin = currentUser?.is_admin;
   const isJoined = currentUser && room.participants.includes(currentUser.username);
-
   const agentsHtml = room.agents.map(a => {
     const ag = AGENTS.find(x => x.name === a);
     return ag ? `<img src="${ag.img}" class="agent-img" title="${a}" onerror="this.style.display='none'">` : '';
   }).join('');
-
   const chatHtml = room.messages.map(m =>
     `<div class="chat-msg"><b>${m.sender}</b> (${new Date(m.time).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}): ${m.text}</div>`
   ).join('');
-
   const participantsHtml = room.participants.map(p =>
     `<div class="participant-row"><div class="participant-avatar">${p[0].toUpperCase()}</div><span>${p}</span></div>`
   ).join('');
-
   setTimeout(() => startCountdown(room.id, room.expires_at), 50);
-
   return `
     <div class="room-card">
       <div class="room-header">
@@ -263,10 +255,9 @@ function renderRoomCard(room) {
       <div class="room-badges">
         <span class="badge">${room.mode}</span>
         <span class="badge">${room.age}</span>
-        <span class="badge ${room.microphone ? 'badge-green' : 'badge-red'}">${room.microphone ? '🎤 Mikrofon: EVET' : ' Mikrofon: HAYIR'}</span>
+        <span class="badge ${room.microphone ? 'badge-green' : 'badge-red'}">${room.microphone ? '🎤 Mikrofon: EVET' : '🔇 Mikrofon: HAYIR'}</span>
       </div>
       ${room.description ? `<div class="room-desc">${room.description}</div>` : ''}
-
       <div class="room-participants">
         <h4>👥 Katılımcılar (${room.participants.length + 1}/5)</h4>
         <div class="participant-row">
@@ -275,13 +266,11 @@ function renderRoomCard(room) {
         </div>
         ${participantsHtml}
       </div>
-
       <div class="room-actions">
         ${!isOwner && !isJoined ? `<button class="btn-hero btn-hero-success" onclick="joinRoom(${room.id})">+ Katıl</button>` : ''}
         ${isJoined ? `<span class="badge badge-green">✓ Katıldın</span>` : ''}
-        ${(isOwner || isAdmin) ? `<button class="btn-hero btn-hero-danger" onclick="deleteRoom(${room.id})">️ Sil</button>` : ''}
+        ${(isOwner || isAdmin) ? `<button class="btn-hero btn-hero-danger" onclick="deleteRoom(${room.id})">🗑️ Sil</button>` : ''}
       </div>
-
       <div class="room-chat">
         <h4>💬 Sohbet</h4>
         <div class="chat-messages" id="chat-${room.id}">${chatHtml || '<p style="color:#64748b; font-size:12px;">Henüz mesaj yok</p>'}</div>
@@ -330,7 +319,6 @@ async function createRoom() {
   const age = document.getElementById('room-age').value;
   const description = document.getElementById('room-desc').value;
   const microphone = document.getElementById('room-mic').checked;
-
   const data = await apiFetch('/rooms', {
     method: 'POST', body: JSON.stringify({ mode, age, description, agents: selectedAgents, microphone })
   });
@@ -367,12 +355,10 @@ async function startMatchmaking() {
   const btn = document.getElementById('match-btn');
   const status = document.getElementById('match-status');
   const result = document.getElementById('match-result');
-
   btn.disabled = true;
   btn.textContent = 'Aranıyor...';
   result.innerHTML = '';
   status.innerHTML = '<p style="margin-top:15px; color:#a855f7;">Rankına uygun takım arkadaşları aranıyor...</p>';
-
   const tryMatch = async () => {
     const data = await apiFetch('/matchmaking/join', { method: 'POST' });
     if (data.matched) {
@@ -428,7 +414,6 @@ async function watchAd() {
   if (!getToken()) { alert('Puan kazanmak için önce giriş yapmalısınız!'); switchPage('login'); return; }
   const confirmWatch = confirm("Reklam izleme simülasyonu başlatılıyor. 3 saniye bekleyin...");
   if (!confirmWatch) return;
-
   setTimeout(async () => {
     const data = await apiFetch('/giveaway/watch-ad', { method: 'POST' });
     if (data.success) {
@@ -446,7 +431,6 @@ async function redeemPromoCode() {
   const codeInput = document.getElementById('promo-code-input');
   const code = codeInput.value.trim().toUpperCase();
   if (!code) { alert('Lütfen bir kod girin!'); return; }
-
   const data = await apiFetch('/giveaway/redeem-code', { method: 'POST', body: JSON.stringify({ code }) });
   if (data.success) {
     alert(data.message);
@@ -458,34 +442,145 @@ async function redeemPromoCode() {
   }
 }
 
-async function loadAdminRooms() {
-  if (!currentUser?.is_admin) { alert('Admin değilsiniz!'); switchPage('home'); return; }
-  const data = await apiFetch('/admin/rooms');
-  const container = document.getElementById('admin-rooms-list');
-  if (!data.success || data.rooms.length === 0) { container.innerHTML = '<p style="color:#94a3b8;">Aktif ilan yok.</p>'; return; }
-  container.innerHTML = data.rooms.map(r => `<div class="admin-item"> <div class="admin-item-info"> <b>#${r.id}</b> - ${r.username} • ${r.mode} • ${r.age} <div class="meta">Katılımcı: ${(r.participant_count || 0) + 1}</div> </div> <button class="btn-hero btn-hero-danger" onclick="adminDeleteRoom(${r.id})">🗑️ Sil</button> </div>`).join('');
+async function loadAds() {
+  const container = document.getElementById('ads-container');
+  if (!container) return;
+  const data = await fetch(API_URL + '/ads').then(r => r.json());
+  if (!data.success || data.ads.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = data.ads.map(ad => `
+    <div class="ad-banner" onclick="window.open('${ad.url}', '_blank'); fetch('${API_URL}/ads/${ad.id}/click', {method:'POST'})">
+      ${ad.image_url ? `<img src="${ad.image_url}" alt="${ad.title}">` : ''}
+      <h3>${ad.title}</h3>
+      <p>Tıkla ve detayları gör →</p>
+    </div>
+  `).join('');
 }
 
-async function adminDeleteRoom(id) {
-  if (!confirm('İlanı silmek istediğinize emin misiniz?')) return;
-  const data = await apiFetch(`/admin/rooms/${id}`, { method: 'DELETE' });
-  if (data.success) loadAdminRooms();
+async function loadSiteSettings() {
+  try {
+    const data = await fetch(API_URL + '/settings').then(r => r.json());
+    if (data.success) {
+      const s = data.settings;
+      if (s.site_logo) document.getElementById('site-logo').innerHTML = s.site_logo;
+      if (s.hero_badge) document.getElementById('hero-badge').textContent = s.hero_badge;
+      if (s.hero_title) document.getElementById('hero-title').textContent = s.hero_title;
+      if (s.hero_subtitle) document.getElementById('hero-subtitle').innerHTML = s.hero_subtitle;
+      if (s.giveaway_date && s.giveaway_prize) document.getElementById('giveaway-title').textContent = `${s.giveaway_date} - ${s.giveaway_prize} ÇEKİLİŞİ`;
+      if (s.youtube_channel) {
+        const ytLink = document.getElementById('youtube-link');
+        if (ytLink) {
+          ytLink.textContent = s.youtube_channel;
+          if (s.youtube_url) ytLink.href = s.youtube_url;
+        }
+      }
+    }
+  } catch (e) { console.error('Settings load error:', e); }
+}
+
+// ==================== ADMIN PANEL ====================
+
+function switchAdminTab(tabName) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('admin-tab-' + tabName).classList.add('active');
+  if (tabName === 'dashboard') loadAdminDashboard();
+  if (tabName === 'users') loadAdminUsers();
+  if (tabName === 'codes') loadAdminCodes();
+  if (tabName === 'ads') loadAdminAds();
+  if (tabName === 'settings') loadAdminSettings();
+}
+
+async function loadAdminDashboard() {
+  if (!currentUser?.is_admin) return;
+  const data = await apiFetch('/admin/dashboard');
+  if (!data.success) return;
+  document.getElementById('stat-users').textContent = data.stats.totalUsers;
+  document.getElementById('stat-rooms').textContent = data.stats.totalRooms;
+  document.getElementById('stat-participants').textContent = data.stats.totalParticipants;
+  document.getElementById('stat-banned').textContent = data.stats.bannedUsers;
+  document.getElementById('stat-points').textContent = data.stats.totalPoints;
+  document.getElementById('stat-tickets').textContent = data.stats.totalTickets;
+  
+  const recentUsersEl = document.getElementById('recent-users-list');
+  if (data.recentUsers.length === 0) {
+    recentUsersEl.innerHTML = '<p style="color:#94a3b8;">Henüz kullanıcı yok.</p>';
+  } else {
+    recentUsersEl.innerHTML = data.recentUsers.map(u => `
+      <div class="recent-item">
+        <div>
+          <div class="name">${u.username}</div>
+          <div class="meta">${u.valorant_id || '-'} • ${u.rank}</div>
+        </div>
+        <div class="meta">${new Date(u.created_at).toLocaleDateString('tr-TR')}</div>
+      </div>
+    `).join('');
+  }
+  
+  const recentRoomsEl = document.getElementById('recent-rooms-list');
+  if (data.recentRooms.length === 0) {
+    recentRoomsEl.innerHTML = '<p style="color:#94a3b8;">Henüz ilan yok.</p>';
+  } else {
+    recentRoomsEl.innerHTML = data.recentRooms.map(r => `
+      <div class="recent-item">
+        <div>
+          <div class="name">#${r.id} - ${r.username}</div>
+          <div class="meta">${r.mode}</div>
+        </div>
+        <div class="meta">${new Date(r.created_at).toLocaleDateString('tr-TR')}</div>
+      </div>
+    `).join('');
+  }
 }
 
 async function loadAdminUsers() {
-  if (!currentUser?.is_admin) { alert('Admin değilsiniz!'); switchPage('home'); return; }
+  if (!currentUser?.is_admin) return;
   const data = await apiFetch('/admin/users');
+  if (!data.success) return;
+  allUsers = data.users;
+  renderUsersList(allUsers);
+}
+
+function renderUsersList(users) {
   const container = document.getElementById('admin-users-list');
   if (!container) return;
-  if (!data.success || data.users.length === 0) { container.innerHTML = '<p style="color:#94a3b8;">Kayıtlı kullanıcı yok.</p>'; return; }
-  container.innerHTML = data.users.map(u => `<div class="admin-item ${u.is_banned ? 'banned' : ''}"> <div class="admin-item-info"> <b>${u.username}</b> ${u.is_admin ? '<span class="admin-tag admin-tag-admin">ADMIN</span>' : ''} ${u.is_banned ? '<span class="admin-tag admin-tag-banned">BANLI</span>' : ''} <div class="meta">${u.valorant_id || '-'} • ${u.rank} • ${u.role}</div> ${u.ban_reason ? `<div style="font-size:11px; color:#ef4444; margin-top:4px;">Sebep: ${u.ban_reason}</div>` : ''} </div> <div style="display:flex; gap:6px; flex-wrap:wrap;"> ${u.is_banned ? `<button class="btn-hero btn-hero-success" onclick="unbanUser(${u.id})">✓ Ban Kaldır</button>` : `<button class="btn-hero btn-hero-danger" onclick="banUser(${u.id})">🚫 Banla</button>`} ${!u.is_admin ? `<button class="badge" style="background:#1e3a8a; color:#60a5fa; cursor:pointer;" onclick="toggleAdmin(${u.id})">⭐ Admin Yap/Al</button>` : ''} </div> </div>`).join('');
+  if (users.length === 0) {
+    container.innerHTML = '<p style="color:#94a3b8;">Kullanıcı bulunamadı.</p>';
+    return;
+  }
+  container.innerHTML = users.map(u => `
+    <div class="admin-user-item ${u.is_banned ? 'banned' : ''}">
+      <div class="admin-user-info">
+        <b>${u.username}</b>
+        ${u.is_admin ? '<span class="admin-tag admin-tag-admin">ADMIN</span>' : ''}
+        ${u.is_banned ? `<span class="admin-tag admin-tag-banned">BANLI</span>` : ''}
+        <div class="meta">${u.valorant_id || '-'} • ${u.rank} • ${u.role}</div>
+        <div class="meta">💰 ${u.points} Puan • ️ ${u.tickets} Bilet</div>
+        ${u.ban_reason ? `<div style="font-size:11px; color:#ef4444; margin-top:4px;">Sebep: ${u.ban_reason}</div>` : ''}
+      </div>
+      <div class="admin-actions">
+        ${u.is_banned ? `<button class="btn-hero btn-hero-success" onclick="unbanUser(${u.id})">✓ Ban Kaldır</button>` : `<button class="btn-hero btn-hero-danger" onclick="banUser(${u.id})"> Banla</button>`}
+        ${!u.is_admin ? `<button class="badge" style="background:#1e3a8a; color:#60a5fa; cursor:pointer;" onclick="toggleAdmin(${u.id})">⭐ Admin Yap</button>` : `<button class="badge" style="background:#64748b; color:#fff; cursor:pointer;" onclick="toggleAdmin(${u.id})">Admin Al</button>`}
+        <button class="btn-hero btn-hero-danger" onclick="deleteUser(${u.id})">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterUsers() {
+  const search = document.getElementById('user-search').value.toLowerCase();
+  const filtered = allUsers.filter(u => u.username.toLowerCase().includes(search) || (u.valorant_id || '').toLowerCase().includes(search));
+  renderUsersList(filtered);
 }
 
 async function banUser(id) {
   const reason = prompt('Ban sebebi (boş bırakılabilir):');
   if (reason === null) return;
   const data = await apiFetch(`/admin/users/${id}/ban`, { method: 'POST', body: JSON.stringify({ reason }) });
-  if (data.success) { alert('✅ Kullanıcı banlandı'); loadAdminUsers(); loadRooms(); }
+  if (data.success) { alert('✅ Kullanıcı banlandı'); loadAdminUsers(); }
   else alert('❌ ' + data.message);
 }
 
@@ -501,6 +596,167 @@ async function toggleAdmin(id) {
   const data = await apiFetch(`/admin/users/${id}/toggle-admin`, { method: 'POST' });
   if (data.success) { alert('✅ Güncellendi'); loadAdminUsers(); }
   else alert('❌ ' + data.message);
+}
+
+async function deleteUser(id) {
+  if (!confirm('Bu kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?')) return;
+  const data = await apiFetch(`/admin/users/${id}`, { method: 'DELETE' });
+  if (data.success) { alert('✅ Kullanıcı silindi'); loadAdminUsers(); }
+  else alert('❌ ' + data.message);
+}
+
+async function loadAdminCodes() {
+  if (!currentUser?.is_admin) return;
+  const data = await apiFetch('/admin/promo-codes');
+  if (!data.success) return;
+  const container = document.getElementById('admin-codes-list');
+  if (data.codes.length === 0) {
+    container.innerHTML = '<p style="color:#94a3b8;">Henüz kod yok.</p>';
+    return;
+  }
+  container.innerHTML = data.codes.map(c => {
+    const percent = (c.current_uses / c.max_uses) * 100;
+    const isFull = c.current_uses >= c.max_uses;
+    return `
+      <div class="admin-code-item">
+        <div class="code-info">
+          <div class="code-name">${c.code}</div>
+          <div class="code-meta">Kullanım: ${c.current_uses} / ${c.max_uses} • Ödül: ${c.points_reward} Puan</div>
+          <div class="code-progress"><div class="code-progress-bar" style="width: ${percent}%"></div></div>
+        </div>
+        <div class="admin-actions">
+          ${isFull ? '<span class="badge badge-red">DOLDU</span>' : '<span class="badge badge-green">AKTİF</span>'}
+          <button class="btn-hero btn-hero-danger" onclick="deleteCode('${c.code}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function createPromoCode() {
+  const code = document.getElementById('new-code').value.trim().toUpperCase();
+  const maxUses = parseInt(document.getElementById('new-code-max').value);
+  const pointsReward = parseInt(document.getElementById('new-code-points').value) || 100;
+  if (!code || !maxUses) { alert('Kod ve maksimum kullanım gerekli!'); return; }
+  const data = await apiFetch('/admin/promo-codes', {
+    method: 'POST', body: JSON.stringify({ code, max_uses: maxUses, points_reward: pointsReward })
+  });
+  if (data.success) {
+    alert('✅ Kod oluşturuldu!');
+    document.getElementById('new-code').value = '';
+    document.getElementById('new-code-max').value = '';
+    document.getElementById('new-code-points').value = '';
+    loadAdminCodes();
+  } else {
+    alert('❌ ' + data.message);
+  }
+}
+
+async function deleteCode(code) {
+  if (!confirm('Bu kodu silmek istediğinize emin misiniz?')) return;
+  const data = await apiFetch(`/admin/promo-codes/${code}`, { method: 'DELETE' });
+  if (data.success) { alert('✅ Kod silindi'); loadAdminCodes(); }
+  else alert('❌ ' + data.message);
+}
+
+async function loadAdminAds() {
+  if (!currentUser?.is_admin) return;
+  const data = await apiFetch('/admin/ads');
+  if (!data.success) return;
+  const container = document.getElementById('admin-ads-list');
+  if (data.ads.length === 0) {
+    container.innerHTML = '<p style="color:#94a3b8;">Henüz reklam yok.</p>';
+    return;
+  }
+  container.innerHTML = data.ads.map(ad => `
+    <div class="admin-ad-item">
+      <div class="ad-info">
+        <div class="ad-name">${ad.title}</div>
+        <div class="ad-url">${ad.url}</div>
+        <div class="ad-clicks">👆 ${ad.clicks} tıklama</div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="ad-status ${ad.is_active ? 'active' : 'inactive'}">${ad.is_active ? 'AKTİF' : 'PASİF'}</span>
+        <button class="btn-hero btn-hero-${ad.is_active ? 'danger' : 'success'}" onclick="toggleAd(${ad.id}, ${!ad.is_active})">${ad.is_active ? 'Devre Dışı Bırak' : 'Aktif Et'}</button>
+        <button class="btn-hero btn-hero-danger" onclick="deleteAd(${ad.id})">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function createAd() {
+  const title = document.getElementById('ad-title').value.trim();
+  const url = document.getElementById('ad-url').value.trim();
+  const imageUrl = document.getElementById('ad-image').value.trim();
+  if (!title || !url) { alert('Başlık ve URL gerekli!'); return; }
+  const data = await apiFetch('/admin/ads', {
+    method: 'POST', body: JSON.stringify({ title, url, image_url: imageUrl })
+  });
+  if (data.success) {
+    alert('✅ Reklam eklendi!');
+    document.getElementById('ad-title').value = '';
+    document.getElementById('ad-url').value = '';
+    document.getElementById('ad-image').value = '';
+    loadAdminAds();
+    loadAds();
+  } else {
+    alert('❌ ' + data.message);
+  }
+}
+
+async function toggleAd(id, isActive) {
+  const data = await apiFetch(`/admin/ads/${id}`, {
+    method: 'PUT', body: JSON.stringify({ is_active: isActive })
+  });
+  if (data.success) { loadAdminAds(); loadAds(); }
+}
+
+async function deleteAd(id) {
+  if (!confirm('Bu reklamı silmek istediğinize emin misiniz?')) return;
+  const data = await apiFetch(`/admin/ads/${id}`, { method: 'DELETE' });
+  if (data.success) { alert('✅ Reklam silindi'); loadAdminAds(); loadAds(); }
+  else alert('❌ ' + data.message);
+}
+
+async function loadAdminSettings() {
+  if (!currentUser?.is_admin) return;
+  const data = await apiFetch('/admin/settings');
+  if (!data.success) return;
+  const s = data.settings;
+  document.getElementById('set-site-title').value = s.site_title || '';
+  document.getElementById('set-hero-badge').value = s.hero_badge || '';
+  document.getElementById('set-hero-title').value = s.hero_title || '';
+  document.getElementById('set-hero-subtitle').value = s.hero_subtitle || '';
+  document.getElementById('set-giveaway-date').value = s.giveaway_date || '';
+  document.getElementById('set-giveaway-prize').value = s.giveaway_prize || '';
+  document.getElementById('set-youtube-channel').value = s.youtube_channel || '';
+  document.getElementById('set-youtube-url').value = s.youtube_url || '';
+  document.getElementById('set-ad-title').value = s.ad_title || '';
+  document.getElementById('set-ad-url').value = s.ad_url || '';
+}
+
+async function saveSettings() {
+  const settings = {
+    site_title: document.getElementById('set-site-title').value,
+    hero_badge: document.getElementById('set-hero-badge').value,
+    hero_title: document.getElementById('set-hero-title').value,
+    hero_subtitle: document.getElementById('set-hero-subtitle').value,
+    giveaway_date: document.getElementById('set-giveaway-date').value,
+    giveaway_prize: document.getElementById('set-giveaway-prize').value,
+    youtube_channel: document.getElementById('set-youtube-channel').value,
+    youtube_url: document.getElementById('set-youtube-url').value,
+    ad_title: document.getElementById('set-ad-title').value,
+    ad_url: document.getElementById('set-ad-url').value
+  };
+  const data = await apiFetch('/admin/settings/bulk', {
+    method: 'POST', body: JSON.stringify(settings)
+  });
+  if (data.success) {
+    alert('✅ Tüm ayarlar kaydedildi!');
+    loadSiteSettings();
+  } else {
+    alert('❌ ' + data.message);
+  }
 }
 
 function fillRankSelects() {
