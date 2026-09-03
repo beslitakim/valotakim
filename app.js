@@ -37,7 +37,6 @@ const RANKS = [
   "Yücelik 1", "Yücelik 2", "Yücelik 3", "Ölümsüzlük 1", "Ölümsüzlük 2", "Ölümsüzlük 3", "Radiant"
 ];
 
-// ============ YARDIMCI ============
 function getToken() { return localStorage.getItem('valotakim_token'); }
 function setToken(t) { localStorage.setItem('valotakim_token', t); }
 function clearToken() { localStorage.removeItem('valotakim_token'); }
@@ -53,7 +52,6 @@ async function apiFetch(url, options = {}) {
   }
 }
 
-// ============ GERİ SAYIM SİSTEMİ ============
 function startCountdown(roomId, expiresAt) {
   if (countdownIntervals[roomId]) clearInterval(countdownIntervals[roomId]);
   const el = document.getElementById(`countdown-${roomId}`);
@@ -74,7 +72,6 @@ function startCountdown(roomId, expiresAt) {
   countdownIntervals[roomId] = setInterval(update, 1000);
 }
 
-// ============ SAYFA GEÇİŞİ ============
 function switchPage(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('page-' + pageId);
@@ -87,7 +84,6 @@ function switchPage(pageId) {
   if (pageId === 'home') loadHomeGiveawayParticipants();
 }
 
-// ============ AUTH ============
 async function checkAuthState() {
   const token = getToken();
   if (!token) { showLoggedOut(); return; }
@@ -97,6 +93,7 @@ async function checkAuthState() {
     if (result.success) {
       currentUser = result.user;
       showLoggedIn();
+      updatePointsDisplay(result.user.points, result.user.tickets);
     } else {
       clearToken();
       showLoggedOut();
@@ -153,7 +150,7 @@ async function register() {
   }).then(r => r.json());
 
   if (data.success) {
-    alert(`✅ Kayıt başarılı!\nKullanıcı adınız: ${data.username}\n\nŞimdi giriş yapabilirsiniz.`);
+    alert(`✅ Kayıt başarılı!\nKullanıcı adınız: ${data.username}\n\nHediye: 100 SmokGG Puanı ve 1 Çekiliş Biletiniz hesabınıza tanımlandı!`);
     switchPage('login');
   } else {
     alert('❌ ' + (data.message || 'Kayıt hatası'));
@@ -174,6 +171,7 @@ async function login() {
     setToken(data.token);
     currentUser = data.user;
     showLoggedIn();
+    updatePointsDisplay(data.user.points, data.user.tickets);
     alert('✅ Giriş başarılı! Hoş geldin, ' + data.user.username);
     switchPage('home');
   } else {
@@ -181,7 +179,6 @@ async function login() {
   }
 }
 
-// ============ PROFİL ============
 async function loadProfile() {
   if (!getToken()) { switchPage('login'); return; }
   const data = await apiFetch('/profile');
@@ -191,7 +188,15 @@ async function loadProfile() {
     document.getElementById('prof-valorant').value = data.user.valorant_id;
     document.getElementById('prof-rank').value = data.user.rank;
     document.getElementById('prof-role').value = data.user.role;
+    updatePointsDisplay(data.user.points, data.user.tickets);
   }
+}
+
+function updatePointsDisplay(points, tickets) {
+  const pointsEl = document.getElementById('user-points');
+  const ticketsEl = document.getElementById('user-tickets');
+  if (pointsEl) pointsEl.textContent = points || 0;
+  if (ticketsEl) ticketsEl.textContent = tickets || 0;
 }
 
 async function updateProfile() {
@@ -202,7 +207,6 @@ async function updateProfile() {
   if (data.success) { alert('✅ Profil güncellendi!'); loadProfile(); }
 }
 
-// ============ İLANLAR ============
 async function loadRooms() {
   const data = await apiFetch('/rooms');
   const container = document.getElementById('rooms-list');
@@ -357,7 +361,6 @@ async function sendMessage(roomId) {
   if (data.success) { input.value = ''; loadRooms(); }
 }
 
-// ============ 5'Lİ TAKIM ============
 async function startMatchmaking() {
   if (!getToken()) { alert('Önce giriş yapın!'); switchPage('login'); return; }
   const btn = document.getElementById('match-btn');
@@ -385,7 +388,6 @@ async function startMatchmaking() {
   matchmakingInterval = setInterval(tryMatch, 3000);
 }
 
-// ============ ÇEKİLİŞ ============
 async function loadGiveawayParticipants() {
   const container = document.getElementById('giveaway-participants-list');
   if (!container) return;
@@ -408,26 +410,61 @@ async function loadHomeGiveawayParticipants() {
   container.innerHTML = data.participants.slice(0, 10).map((p, i) => `<div class="participant-item-row" style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;"> <span>#${i + 1} - ${p.username}</span> <span style="color:#4ade80; font-size:11px;">✓</span> </div>`).join('');
 }
 
-async function joinGiveaway() {
+// --- YENİ ÇEKİLİŞ FONKSİYONLARI ---
+async function joinGiveawayWithPoints() {
   if (!getToken()) { alert('Çekilişe katılabilmek için önce giriş yapmalısınız!'); switchPage('login'); return; }
-  const res = await fetch(API_URL + '/giveaway/join', { method: 'POST', headers: authHeaders() });
-  const data = await res.json();
+  const data = await apiFetch('/giveaway/join', { method: 'POST' });
   if (data.success) {
-    alert('🎉 Tebrikler! Çekilişe başarıyla katıldınız.');
+    alert(data.message);
+    const profile = await apiFetch('/profile');
+    if (profile.success) updatePointsDisplay(profile.user.points, profile.user.tickets);
     loadGiveawayParticipants();
-    loadHomeGiveawayParticipants();
   } else {
-    alert(data.message || 'Zaten katıldınız veya hata oluştu.');
+    alert(data.message);
   }
 }
 
-// ============ ADMIN ============
+async function watchAd() {
+  if (!getToken()) { alert('Puan kazanmak için önce giriş yapmalısınız!'); switchPage('login'); return; }
+  const confirmWatch = confirm("Reklam izleme simülasyonu başlatılıyor. 3 saniye bekleyin...");
+  if (!confirmWatch) return;
+
+  setTimeout(async () => {
+    const data = await apiFetch('/giveaway/watch-ad', { method: 'POST' });
+    if (data.success) {
+      alert(data.message);
+      const profile = await apiFetch('/profile');
+      if (profile.success) updatePointsDisplay(profile.user.points, profile.user.tickets);
+    } else {
+      alert(data.message);
+    }
+  }, 3000);
+}
+
+async function redeemPromoCode() {
+  if (!getToken()) { alert('Kod kullanmak için önce giriş yapmalısınız!'); switchPage('login'); return; }
+  const codeInput = document.getElementById('promo-code-input');
+  const code = codeInput.value.trim().toUpperCase();
+  if (!code) { alert('Lütfen bir kod girin!'); return; }
+
+  const data = await apiFetch('/giveaway/redeem-code', { method: 'POST', body: JSON.stringify({ code }) });
+  if (data.success) {
+    alert(data.message);
+    codeInput.value = '';
+    const profile = await apiFetch('/profile');
+    if (profile.success) updatePointsDisplay(profile.user.points, profile.user.tickets);
+  } else {
+    alert(data.message);
+  }
+}
+
+// --- ADMIN ---
 async function loadAdminRooms() {
   if (!currentUser?.is_admin) { alert('Admin değilsiniz!'); switchPage('home'); return; }
   const data = await apiFetch('/admin/rooms');
   const container = document.getElementById('admin-rooms-list');
   if (!data.success || data.rooms.length === 0) { container.innerHTML = '<p style="color:#94a3b8;">Aktif ilan yok.</p>'; return; }
-  container.innerHTML = data.rooms.map(r => `<div style="background:#131722; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid #303642;"> <div> <b style="color:#a855f7;">#${r.id}</b> - ${r.username} • ${r.mode} • ${r.age} <div style="font-size:12px; color:#94a3b8;">Katılımcı: ${(r.participants ? r.participants.length : 0) + 1}</div> </div> <button class="btn-red-reject" onclick="adminDeleteRoom(${r.id})">🗑️ Sil</button> </div>`).join('');
+  container.innerHTML = data.rooms.map(r => `<div style="background:#131722; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid #303642;"> <div> <b style="color:#a855f7;">#${r.id}</b> - ${r.username} • ${r.mode} • ${r.age} <div style="font-size:12px; color:#94a3b8;">Katılımcı: ${(r.participant_count || 0) + 1}</div> </div> <button class="btn-red-reject" onclick="adminDeleteRoom(${r.id})">🗑️ Sil</button> </div>`).join('');
 }
 
 async function adminDeleteRoom(id) {
@@ -467,7 +504,6 @@ async function toggleAdmin(id) {
   else alert('❌ ' + data.message);
 }
 
-// ============ RANK SELECT ============
 function fillRankSelects() {
   ['reg-rank', 'prof-rank'].forEach(id => {
     const sel = document.getElementById(id);
@@ -476,7 +512,6 @@ function fillRankSelects() {
   });
 }
 
-// ============ BAŞLAT ============
 document.addEventListener('DOMContentLoaded', () => {
   fillRankSelects();
   checkAuthState();

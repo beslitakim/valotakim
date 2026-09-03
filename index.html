@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <nav>
   <div class="logo">VALOTAKIM</div>
   <div class="nav-links">
@@ -35,11 +34,10 @@
     </div>
     <p style="margin-top:20px; font-size:14px; color:#94a3b8;">Bu uygulama <a href="https://www.youtube.com/@SmokGG01" target="_blank" style="color:#a855f7; font-weight:bold;">SMOKGG</a> YouTube Kanalı aboneleri için özel olarak yapılmıştır.</p>
   </div>
-
   <div class="giveaway-banner">
     <h2>🎁 30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
-    <p>Sisteme kayıt ol, butona bas ve ödülü kazanma şansını yakala!</p>
-    <button class="btn-large btn-purple" style="margin-top:15px;" onclick="switchPage('giveaway')">🎯 Çekilişe Katıl</button>
+    <p>Sisteme kayıt ol, puan topla ve ödülü kazanma şansını yakala!</p>
+    <button class="btn-large btn-purple" style="margin-top:15px;" onclick="switchPage('giveaway')">🎯 Çekilişe Git</button>
     <div id="home-giveaway-participants" style="margin-top:20px; max-width:300px; margin-left:auto; margin-right:auto;"></div>
   </div>
 </div>
@@ -112,16 +110,43 @@
     </div>
     <div class="form-group"><label>Şifre</label><input type="password" id="reg-pass"></div>
     <div class="form-group"><label>Şifre (Tekrar)</label><input type="password" id="reg-pass2"></div>
-    <button class="btn-submit" onclick="register()">Hesap Oluştur</button>
+    <button class="btn-submit" onclick="register()">Hesap Oluştur (100 Puan Hediye!)</button>
   </div>
 </div>
 
 <!-- GIVEAWAY PAGE -->
 <div id="page-giveaway" class="page">
   <h2>🎁 30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
-  <p style="margin:15px 0;">Sisteme kayıt ol, butona bas ve ödülü kazanma şansını yakala!</p>
-  <button class="btn-large btn-purple" onclick="joinGiveaway()">🎯 Çekilişe Katılım Sağla</button>
-  <h3 style="margin-top:30px;">📋 Çekilişe Katılanlar Listesi</h3>
+  
+  <div class="points-display" style="background:#1e293b; padding:20px; border-radius:12px; text-align:center; margin:20px 0; border:1px solid #a855f7; display:flex; justify-content:space-around; flex-wrap:wrap; gap:15px;">
+    <div>
+      <h3 style="color:#fbbf24; margin:0;">💰 SmokGG Puanınız</h3>
+      <h1 style="color:#fbbf24; margin:5px 0;" id="user-points">0</h1>
+    </div>
+    <div>
+      <h3 style="color:#4ade80; margin:0;">🎟️ Çekiliş Biletiniz</h3>
+      <h1 style="color:#4ade80; margin:5px 0;" id="user-tickets">0</h1>
+    </div>
+  </div>
+
+  <button class="btn-large btn-purple" style="width:100%; margin-bottom:20px;" onclick="joinGiveawayWithPoints()">🎯 100 Puan Harca ve 1 Bilet Al (Çekilişe Katıl)</button>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px; margin-bottom:30px;">
+    <div style="background:#131722; padding:20px; border-radius:12px; border:1px solid #303642; text-align:center;">
+      <h4 style="color:#a855f7;">📺 Reklam İzle</h4>
+      <p style="font-size:13px; color:#94a3b8; margin:10px 0;">Kısa bir reklam izleyerek anında +50 Puan kazan!</p>
+      <button class="btn-large btn-green" style="font-size:14px; padding:10px; width:100%;" onclick="watchAd()">Reklam İzle (+50 Puan)</button>
+    </div>
+
+    <div style="background:#131722; padding:20px; border-radius:12px; border:1px solid #303642; text-align:center;">
+      <h4 style="color:#a855f7;">🎁 YouTube Kodu Gir</h4>
+      <p style="font-size:13px; color:#94a3b8; margin:10px 0;">SMOKGG videolarındaki kodu gir. İlk 50 kişi için +100 Puan!</p>
+      <input type="text" id="promo-code-input" placeholder="Kodu buraya yaz..." style="width:100%; padding:10px; margin-bottom:10px; background:#0b0e14; border:1px solid #303642; border-radius:6px; color:white; text-align:center;">
+      <button class="btn-large btn-purple" style="font-size:14px; padding:10px; width:100%;" onclick="redeemPromoCode()">Kodu Kullan</button>
+    </div>
+  </div>
+
+  <h3 style="margin-top:20px;">📋 Çekilişe Katılanlar Listesi</h3>
   <div id="giveaway-participants-list" style="margin-top:15px;"></div>
 </div>
 
