@@ -27,7 +27,7 @@ const AGENTS = [
   { name: "Cypher", img: "https://media.valorant-api.com/agents/117ed9e3-49f3-6512-3ccf-0cada8e1a8c3/displayicon.png" },
   { name: "Sage", img: "https://media.valorant-api.com/agents/569fdd95-4d10-43ab-ca70-79becc718b46/displayicon.png" },
   { name: "Chamber", img: "https://media.valorant-api.com/agents/22697a3d-45bf-8dd7-4fec-8c8b8e1a8c3e/displayicon.png" },
-  { name: "Deadlock", img: "https://media.valorant-api.com/agents/cc8b8e1a-4950-5125-8c8b-8c8b8e1a8c3e/displayicon.png" },
+  { name: "Deadlock", img: "https://media.valorant-api.com/agents/cc8b8e1a-4950-5125-8c8b-8c8b8e1a8c3e/displayicon.png" }
 ];
 
 const RANKS = [
@@ -59,7 +59,6 @@ function startCountdown(roomId, expiresAt) {
   if (countdownIntervals[roomId]) clearInterval(countdownIntervals[roomId]);
   const el = document.getElementById(`countdown-${roomId}`);
   if (!el) return;
-
   const update = () => {
     const diff = new Date(expiresAt).getTime() - Date.now();
     if (diff <= 0) {
@@ -107,29 +106,19 @@ async function checkAuthState() {
 }
 
 function showLoggedIn() {
-  const loginBtn = document.getElementById('nav-login-btn');
-  const registerBtn = document.getElementById('nav-register-btn');
-  const profileBtn = document.getElementById('nav-profile-btn');
-  const logoutBtn = document.getElementById('nav-logout-btn');
-  const adminBtn = document.getElementById('nav-admin-btn');
-  if (loginBtn) loginBtn.style.display = 'none';
-  if (registerBtn) registerBtn.style.display = 'none';
-  if (profileBtn) profileBtn.style.display = 'inline-block';
-  if (logoutBtn) logoutBtn.style.display = 'inline-block';
-  if (adminBtn) adminBtn.style.display = currentUser?.is_admin ? 'inline-block' : 'none';
+  document.getElementById('nav-login-btn').style.display = 'none';
+  document.getElementById('nav-register-btn').style.display = 'none';
+  document.getElementById('nav-profile-btn').style.display = 'inline-block';
+  document.getElementById('nav-logout-btn').style.display = 'inline-block';
+  document.getElementById('nav-admin-btn').style.display = currentUser?.is_admin ? 'inline-block' : 'none';
 }
 
 function showLoggedOut() {
-  const loginBtn = document.getElementById('nav-login-btn');
-  const registerBtn = document.getElementById('nav-register-btn');
-  const profileBtn = document.getElementById('nav-profile-btn');
-  const logoutBtn = document.getElementById('nav-logout-btn');
-  const adminBtn = document.getElementById('nav-admin-btn');
-  if (loginBtn) loginBtn.style.display = 'inline-block';
-  if (registerBtn) registerBtn.style.display = 'inline-block';
-  if (profileBtn) profileBtn.style.display = 'none';
-  if (logoutBtn) logoutBtn.style.display = 'none';
-  if (adminBtn) adminBtn.style.display = 'none';
+  document.getElementById('nav-login-btn').style.display = 'inline-block';
+  document.getElementById('nav-register-btn').style.display = 'inline-block';
+  document.getElementById('nav-profile-btn').style.display = 'none';
+  document.getElementById('nav-logout-btn').style.display = 'none';
+  document.getElementById('nav-admin-btn').style.display = 'none';
 }
 
 function logout() {
@@ -147,6 +136,7 @@ async function register() {
   const role = document.getElementById('reg-role').value;
   const password = document.getElementById('reg-pass').value;
   const passwordConfirm = document.getElementById('reg-pass2').value;
+
   if (!username || !valName || !valTag || !password) {
     alert('Tüm alanları doldurun!'); return;
   }
@@ -154,6 +144,7 @@ async function register() {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, valName, valTag, rank, role, password, passwordConfirm })
   }).then(r => r.json());
+
   if (data.success) {
     alert(`✅ Kayıt başarılı!\nKullanıcı adınız: ${data.username}\n\nŞimdi giriş yapabilirsiniz.`);
     switchPage('login');
@@ -166,10 +157,12 @@ async function login() {
   const username = document.getElementById('login-user').value.trim();
   const password = document.getElementById('login-pass').value;
   if (!username || !password) { alert('Kullanıcı adı ve şifre gerekli!'); return; }
+  
   const data = await fetch(API_URL + '/login', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
   }).then(r => r.json());
+
   if (data.success) {
     setToken(data.token);
     currentUser = data.user;
@@ -209,10 +202,16 @@ async function loadRooms() {
   const data = await apiFetch('/rooms');
   const container = document.getElementById('rooms-list');
   if (!container) return;
-  if (!data.success || !data.rooms) { container.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:40px;">Yüklenemedi</p>'; return; }
+  
+  if (!data.success || !data.rooms) { 
+    container.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:40px;">Yüklenemedi</p>'; 
+    return; 
+  }
+  
   const filter = document.getElementById('room-filter')?.value || 'all';
   let rooms = data.rooms;
   if (filter !== 'all') rooms = rooms.filter(r => r.owner_role === filter);
+  
   if (rooms.length === 0) {
     container.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:40px;">Henüz ilan yok. İlk ilan sen oluştur!</p>';
     return;
@@ -224,62 +223,70 @@ function renderRoomCard(room) {
   const isOwner = currentUser && room.user_id === currentUser.id;
   const isAdmin = currentUser?.is_admin;
   const isJoined = currentUser && room.participants.includes(currentUser.username);
+  
   const agentsHtml = room.agents.map(a => {
     const ag = AGENTS.find(x => x.name === a);
     return ag ? `<img src="${ag.img}" class="mini-agent-img" title="${a}" onerror="this.style.display='none'">` : '';
   }).join('');
+
   const chatHtml = room.messages.map(m =>
     `<div class="chat-msg-item"><b>${m.sender}</b> (${new Date(m.time).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}): ${m.text}</div>`
   ).join('');
+
   const participantsHtml = room.participants.map(p =>
-    `<div class="participant-row"><div class="participant-info"><div class="participant-avatar">${p[0].toUpperCase()}</div><span>${p}</span></div></div>`
+    `<div class="participant-row">
+       <div class="participant-avatar">${p[0].toUpperCase()}</div>
+       <span>${p}</span>
+     </div>`
   ).join('');
 
   setTimeout(() => startCountdown(room.id, room.expires_at), 50);
 
   return `
-  <div class="room-card-custom">
-    <div class="room-left-info">
-      <div class="room-user-avatar">${room.username[0].toUpperCase()}</div>
-      <div>
-        <span class="room-username-txt">${room.username}</span>
-        <span class="room-rank-txt">${room.rank} • ${room.owner_valorant_id}</span>
+    <div class="room-card-custom">
+      <div class="room-left-info">
+        <div class="room-user-avatar">${room.username[0].toUpperCase()}</div>
+        <div>
+          <span class="room-username-txt">${room.username}</span>
+          <span class="room-rank-txt">${room.rank} • ${room.owner_valorant_id}</span>
+        </div>
       </div>
-    </div>
-    <div id="countdown-${room.id}" style="font-size:14px; margin:6px 0;">⏱ --:--</div>
-    <div class="room-middle-agents">${agentsHtml || '<span style="color:#666e7b; font-size:12px;">Ajan seçilmedi</span>'}</div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <span class="badge">${room.mode}</span>
-      <span class="badge">${room.age}</span>
-      <span class="badge ${room.microphone ? 'green' : 'red'}">${room.microphone ? '🎤 Mikrofon: EVET' : '🔇 Mikrofon: HAYIR'}</span>
-    </div>
-    ${room.description ? `<p style="color:#cbd5e1; font-size:13px; background:#090b10; padding:10px; border-radius:8px;">${room.description}</p>` : ''}
-    <div style="border-top:1px solid #262c37; padding-top:12px;">
-      <h4 style="font-size:13px; margin-bottom:8px; color:#a855f7;">👥 Katılımcılar (${room.participants.length + 1}/5)</h4>
-      <div class="participants-management-list">
-        <div class="participant-row">
-          <div class="participant-info">
+      <div id="countdown-${room.id}" style="font-size:14px; margin:6px 0;">⏱ --:--</div>
+      <div class="room-middle-agents">${agentsHtml || '<span style="color:#666e7b; font-size:12px;">Ajan seçilmedi</span>'}</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+        <span class="badge">${room.mode}</span>
+        <span class="badge">${room.age}</span>
+        <span class="badge ${room.microphone ? 'green' : 'red'}">${room.microphone ? '🎤 Mikrofon: EVET' : '🔇 Mikrofon: HAYIR'}</span>
+      </div>
+      ${room.description ? `<p style="color:#cbd5e1; font-size:13px; background:#090b10; padding:10px; border-radius:8px;">${room.description}</p>` : ''}
+      
+      <div style="border-top:1px solid #262c37; padding-top:12px; margin-top:10px;">
+        <h4 style="font-size:13px; margin-bottom:8px; color:#a855f7;">👥 Katılımcılar (${room.participants.length + 1}/5)</h4>
+        <div class="participants-management-list">
+          <div class="participant-row">
             <div class="participant-avatar" style="background:#ef4444;">${room.username[0].toUpperCase()}</div>
             <span><b>${room.username}</b> (Kurucu)</span>
           </div>
+          ${participantsHtml}
         </div>
-        ${participantsHtml}
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+        ${!isOwner && !isJoined ? `<button class="btn-green-accept" onclick="joinRoom(${room.id})">+ Katıl</button>` : ''}
+        ${isJoined ? `<span class="badge" style="background:#1a3a2a; color:#4ade80;">✓ Katıldın</span>` : ''}
+        ${(isOwner || isAdmin) ? `<button class="btn-red-reject" onclick="deleteRoom(${room.id})">🗑️ Sil</button>` : ''}
+      </div>
+
+      <div class="room-chat-box">
+        <h4 style="font-size:13px; color:#a855f7; margin-bottom:8px;">💬 Sohbet</h4>
+        <div class="chat-messages-area" id="chat-${room.id}">${chatHtml || '<p style="color:#666e7b; font-size:12px;">Henüz mesaj yok</p>'}</div>
+        <div class="chat-input-row">
+          <input type="text" id="msg-${room.id}" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') sendMessage(${room.id})">
+          <button class="btn-green-accept" onclick="sendMessage(${room.id})">Gönder</button>
+        </div>
       </div>
     </div>
-    <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-      ${!isOwner && !isJoined ? `<button class="btn-green-accept" onclick="joinRoom(${room.id})">+ Katıl</button>` : ''}
-      ${isJoined ? `<span class="badge" style="background:#1a3a2a; color:#4ade80;">✓ Katıldın</span>` : ''}
-      ${(isOwner || isAdmin) ? `<button class="btn-red-reject" onclick="deleteRoom(${room.id})">🗑️ Sil</button>` : ''}
-    </div>
-    <div class="room-chat-box" style="margin-top:10px;">
-      <h4 style="font-size:13px; color:#a855f7;">💬 Sohbet</h4>
-      <div class="chat-messages-area" id="chat-${room.id}">${chatHtml || '<p style="color:#666e7b; font-size:12px;">Henüz mesaj yok</p>'}</div>
-      <div class="chat-input-row">
-        <input type="text" id="msg-${room.id}" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') sendMessage(${room.id})">
-        <button class="btn-green-accept" onclick="sendMessage(${room.id})">Gönder</button>
-      </div>
-    </div>
-  </div>`;
+  `;
 }
 
 function openCreateRoom() {
@@ -299,7 +306,13 @@ function renderAgentPicker() {
   container.innerHTML = AGENTS.map((a) => {
     const selected = selectedAgents.includes(a.name);
     const idx = selectedAgents.indexOf(a.name);
-    return `<div class="agent-pick-box ${selected ? 'selected' : ''}" onclick="toggleAgent('${a.name}')"> <img src="${a.img}" onerror="this.style.display='none'"> <span class="agent-name-label">${a.name}</span> ${selected ? `<span class="pick-badge">${idx + 1}</span>` : ''} </div>`;
+    return `
+      <div class="agent-pick-box ${selected ? 'selected' : ''}" onclick="toggleAgent('${a.name}')">
+        <img src="${a.img}" onerror="this.style.display='none'">
+        <span class="agent-name-label">${a.name}</span>
+        ${selected ? `<span class="pick-badge">${idx + 1}</span>` : ''}
+      </div>
+    `;
   }).join('');
 }
 
@@ -319,9 +332,11 @@ async function createRoom() {
   const age = document.getElementById('room-age').value;
   const description = document.getElementById('room-desc').value;
   const microphone = document.getElementById('room-mic').checked;
+  
   const data = await apiFetch('/rooms', {
     method: 'POST', body: JSON.stringify({ mode, age, description, agents: selectedAgents, microphone })
   });
+  
   if (data.success) {
     alert('✅ İlan oluşturuldu!');
     closeCreateRoom();
@@ -333,6 +348,7 @@ async function createRoom() {
 async function joinRoom(id) {
   const data = await apiFetch(`/rooms/${id}/join`, { method: 'POST' });
   if (data.success) { alert('✅ İlana katıldın!'); loadRooms(); }
+  else alert('❌ ' + data.message);
 }
 
 async function deleteRoom(id) {
@@ -357,23 +373,36 @@ async function startMatchmaking() {
   const btn = document.getElementById('match-btn');
   const status = document.getElementById('match-status');
   const result = document.getElementById('match-result');
+  
   btn.disabled = true;
-  btn.textContent = ' Aranıyor...';
+  btn.textContent = 'Aranıyor...';
   result.innerHTML = '';
   status.innerHTML = '<p style="margin-top:15px; color:#a855f7;">Rankına uygun takım arkadaşları aranıyor...</p>';
-  
+
   const tryMatch = async () => {
     const data = await apiFetch('/matchmaking/join', { method: 'POST' });
     if (data.matched) {
       clearInterval(matchmakingInterval);
       btn.disabled = false;
-      btn.textContent = ' Eşleşme Ara';
+      btn.textContent = 'Eşleşme Ara';
       status.innerHTML = '<p style="color:#4ade80; font-weight:800; font-size:18px;">✅ TAKIM BULUNDU!</p>';
-      result.innerHTML = `<div class="match-team-card"> <h3 style="color:#a855f7; margin-bottom:15px;">🎉 5\'li Takımın Hazır!</h3> ${data.team.map(t => `<div class="match-team-member"> <span><b>${t.username}</b></span> <span style="color:#a855f7;">${t.rank} • ${t.role}</span> </div>`).join('')} <button class="primary wide" style="margin-top:15px;" onclick="switchPage('rooms')">📋 Takım İlanını Gör</button> </div>`;
+      result.innerHTML = `
+        <div class="match-team-card">
+          <h3 style="color:#a855f7; margin-bottom:15px;">🎉 5'li Takımın Hazır!</h3>
+          ${data.team.map(t => `
+            <div class="match-team-member">
+              <span><b>${t.username}</b></span>
+              <span style="color:#a855f7;">${t.rank} • ${t.role}</span>
+            </div>
+          `).join('')}
+          <button class="btn-large btn-purple" style="margin-top:15px; width:100%;" onclick="switchPage('rooms')">📋 Takım İlanını Gör</button>
+        </div>
+      `;
     } else {
       status.innerHTML = `<p style="margin-top:15px; color:#a855f7;">Kuyrukta ${data.waiting}/5 kişi bekliyor...</p>`;
     }
   };
+
   await tryMatch();
   matchmakingInterval = setInterval(tryMatch, 3000);
 }
@@ -387,7 +416,12 @@ async function loadGiveawayParticipants() {
     container.innerHTML = `<p style="color:#94a3b8; text-align:center; padding:20px;">Henüz kimse katılmadı. İlk katılan sen ol!</p>`;
     return;
   }
-  container.innerHTML = data.participants.map((p, i) => `<div style="background:#131722; padding:10px 15px; border-radius:8px; border:1px solid #303642; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"> <span style="font-weight:700; color:#a855f7;">#${i + 1} - ${p.username}</span> <span style="font-size:12px; color:#4ade80;">Katıldı ✓</span> </div>`).join('');
+  container.innerHTML = data.participants.map((p, i) => `
+    <div style="background:#131722; padding:10px 15px; border-radius:8px; border:1px solid #303642; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <span style="font-weight:700; color:#a855f7;">#${i + 1} - ${p.username}</span>
+      <span style="font-size:12px; color:#4ade80;">Katıldı ✓</span>
+    </div>
+  `).join('');
 }
 
 async function loadHomeGiveawayParticipants() {
@@ -398,7 +432,12 @@ async function loadHomeGiveawayParticipants() {
     container.innerHTML = `<p style="color:#94a3b8; font-size:12px; text-align:center; padding:10px;">Henüz katılan yok.</p>`;
     return;
   }
-  container.innerHTML = data.participants.slice(0, 10).map((p, i) => `<div class="participant-item-row"> <span>#${i + 1} - ${p.username}</span> <span style="color:#4ade80; font-size:11px;">✓</span> </div>`).join('');
+  container.innerHTML = data.participants.slice(0, 5).map((p, i) => `
+    <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;">
+      <span>#${i + 1} - ${p.username}</span>
+      <span style="color:#4ade80;">✓</span>
+    </div>
+  `).join('');
 }
 
 async function joinGiveaway() {
@@ -427,7 +466,15 @@ async function loadAdminRooms() {
     container.innerHTML = '<p style="color:#94a3b8;">Aktif ilan yok.</p>';
     return;
   }
-  container.innerHTML = data.rooms.map(r => `<div style="background:#131722; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid #303642;"> <div> <b style="color:#a855f7;">#${r.id}</b> - ${r.username} • ${r.mode} • ${r.age} <div style="font-size:12px; color:#94a3b8;">Katılımcı: ${(r.participants ? JSON.parse(r.participants).length : 0) + 1}</div> </div> <button class="btn-red-reject" onclick="adminDeleteRoom(${r.id})">🗑️ Sil</button> </div>`).join('');
+  container.innerHTML = data.rooms.map(r => `
+    <div style="background:#131722; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid #303642;">
+      <div>
+        <b style="color:#a855f7;">#${r.id}</b> - ${r.username} • ${r.mode} • ${r.age}
+        <div style="font-size:12px; color:#94a3b8;">Katılımcı: ${parseInt(r.participant_count) + 1}</div>
+      </div>
+      <button class="btn-red-reject" onclick="adminDeleteRoom(${r.id})">🗑️ Sil</button>
+    </div>
+  `).join('');
 }
 
 async function adminDeleteRoom(id) {
@@ -455,9 +502,7 @@ async function loadAdminUsers() {
         ${u.ban_reason ? `<div style="font-size:11px; color:#ef4444;">Sebep: ${u.ban_reason}</div>` : ''}
       </div>
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
-        ${u.is_banned
-          ? `<button class="btn-green-accept" onclick="unbanUser(${u.id})">✓ Ban Kaldır</button>`
-          : `<button class="btn-red-reject" onclick="banUser(${u.id})">🚫 Banla</button>`}
+        ${u.is_banned ? `<button class="btn-green-accept" onclick="unbanUser(${u.id})">✓ Ban Kaldır</button>` : `<button class="btn-red-reject" onclick="banUser(${u.id})">🚫 Banla</button>`}
         ${!u.is_admin ? `<button class="badge" style="background:#1e3a8a; color:#60a5fa; cursor:pointer;" onclick="toggleAdmin(${u.id})">⭐ Admin Yap/Al</button>` : ''}
       </div>
     </div>
