@@ -11,7 +11,7 @@
 
 <nav class="navbar">
   <div class="nav-container">
-    <div class="logo" onclick="switchPage('home')" id="site-logo">VALO<span class="logo-accent">TAKIM</span></div>
+    <div class="logo" onclick="switchPage('home')">VALO<span class="logo-accent">TAKIM</span></div>
     <div class="nav-links" id="nav-links">
       <button class="nav-btn" onclick="switchPage('home')">Ana Sayfa</button>
       <button class="nav-btn" onclick="switchPage('rooms')">İlanlar</button>
@@ -27,64 +27,57 @@
   </div>
 </nav>
 
-<!-- HOME PAGE -->
 <div id="page-home" class="page active">
   <div class="hero-section">
-    <div class="hero-badge" id="hero-badge">🎮 TROLLERDEN KURTUL • KARA LİSTEYE EKLE</div>
-    <h1 class="hero-title" id="hero-title">TAKIMINI BUL!</h1>
-    <h2 class="hero-subtitle" id="hero-subtitle">OYUNA GİR!<br>KEYİFLE KAZAN!</h2>
+    <div class="hero-badge">🎮 TROLLERDEN KURTUL • KARA LİSTEYE EKLE</div>
+    <h1 class="hero-title">TAKIMINI BUL!</h1>
+    <h2 class="hero-subtitle">OYUNA GİR!<br>KEYİFLE KAZAN!</h2>
     <p class="hero-desc">Tek oyuncu ara veya birbirini tanımayan 5 oyuncuyla yeni bir takım oluştur. Rank bazlı akıllı eşleştirme ile tam sana göre takım!</p>
     <div class="hero-buttons">
       <button class="btn-hero btn-hero-primary" onclick="switchPage('rooms')">🔍 1 Kişi Lazım</button>
       <button class="btn-hero btn-hero-outline" onclick="switchPage('matchmaking')">⚡ 5'li Takım Bul</button>
     </div>
     <div class="hero-footer-box">
-      Bu uygulama <a href="#" id="youtube-link" class="smokgg-link" target="_blank">SMOKGG</a> YouTube Kanalı aboneleri için özel olarak yapılmıştır.
+      Bu uygulama <a href="https://www.youtube.com/@SmokGG01" target="_blank" class="smokgg-link">SMOKGG</a> YouTube Kanalı aboneleri için özel olarak yapılmıştır.
     </div>
   </div>
-
   <div class="giveaway-banner">
-    <div class="giveaway-icon"></div>
-    <h2 id="giveaway-title">30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
+    <div class="giveaway-icon">🎁</div>
+    <h2>30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
     <p>Sisteme kayıt ol, puan topla ve ödülü kazanma şansını yakala!</p>
     <button class="btn-hero btn-hero-primary" style="margin-top:15px;" onclick="switchPage('giveaway')">🎯 Çekilişe Git</button>
     <div id="home-giveaway-participants" class="giveaway-mini-list"></div>
   </div>
-
-  <div id="ads-container" class="ads-section"></div>
 </div>
 
-<!-- ROOMS PAGE -->
 <div id="page-rooms" class="page">
   <div class="page-header">
     <h2>🔍 TAKIM İLANLARI</h2>
     <div class="page-header-actions">
       <select id="room-filter" onchange="loadRooms()">
-        <option value="all">Tüm Rollerin İlanları</option>
-        <option value="Duelist">Duelist</option>
-        <option value="Controller">Controller</option>
-        <option value="Initiator">Initiator</option>
-        <option value="Sentinel">Sentinel</option>
-        <option value="Flex">Flex</option>
+        <option value="all">Tüm İlanlar</option>
+        <option value="2">2 Kişi Lazım</option>
+        <option value="3">3 Kişi Lazım</option>
+        <option value="4">4 Kişi Lazım</option>
+        <option value="5">5 Kişi Lazım</option>
       </select>
       <button class="btn-hero btn-hero-primary" onclick="openCreateRoom()">+ İlan Oluştur</button>
+      <button class="btn-hero btn-hero-outline" onclick="loadRooms()">🔄 Yenile</button>
     </div>
   </div>
   <div id="rooms-list"></div>
 </div>
 
-<!-- MATCHMAKING PAGE -->
 <div id="page-matchmaking" class="page">
   <div class="page-header"><h2>⚡ 5'Lİ TAKIM BUL</h2></div>
   <div class="matchmaking-card">
-    <p class="matchmaking-desc">Profilindeki ranka göre akıllı aralıkta eşleşme yapıyoruz.</p>
+    <p class="matchmaking-desc">Profilindeki ranka göre akıllı aralıkta eşleşme yapıyoruz. Ajan çakışması otomatik kontrol edilir.</p>
     <button id="match-btn" class="btn-hero btn-hero-primary" onclick="startMatchmaking()">🔎 Eşleşme Ara</button>
     <div id="match-status"></div>
     <div id="match-result"></div>
   </div>
 </div>
 
-<!-- PROFILE PAGE -->
 <div id="page-profile" class="page">
   <div class="page-header"><h2>👤 Profilim</h2></div>
   <div class="form-card">
@@ -92,15 +85,24 @@
     <div class="form-group"><label>Valorant ID</label><input type="text" id="prof-valorant"></div>
     <div class="form-group"><label>Rank</label><select id="prof-rank"></select></div>
     <div class="form-group"><label>Ana Rol</label>
-      <select id="prof-role"><option value="Duelist">Duelist</option><option value="Controller">Controller</option><option value="Initiator">Initiator</option><option value="Sentinel">Sentinel</option><option value="Flex">Flex</option></select>
+      <select id="prof-role">
+        <option value="Duelist">Duelist</option>
+        <option value="Controller">Controller</option>
+        <option value="Initiator">Initiator</option>
+        <option value="Sentinel">Sentinel</option>
+        <option value="Flex">Flex</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>En İyi 3 Ajanın (Eşleşmede çakışma olmaz)</label>
+      <div id="prof-agent-picker" class="agent-picker-grid"></div>
     </div>
     <button class="btn-hero btn-hero-primary btn-full" onclick="updateProfile()">Bilgileri Güncelle</button>
   </div>
 </div>
 
-<!-- LOGIN PAGE -->
 <div id="page-login" class="page">
-  <div class="page-header"><h2> Giriş Yap</h2></div>
+  <div class="page-header"><h2>🔐 Giriş Yap</h2></div>
   <div class="form-card">
     <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="login-user"></div>
     <div class="form-group"><label>Şifre</label><input type="password" id="login-pass"></div>
@@ -109,7 +111,6 @@
   </div>
 </div>
 
-<!-- REGISTER PAGE -->
 <div id="page-register" class="page">
   <div class="page-header"><h2>📝 Kayıt Ol</h2></div>
   <div class="form-card">
@@ -120,15 +121,20 @@
     </div>
     <div class="form-group"><label>Rank</label><select id="reg-rank"></select></div>
     <div class="form-group"><label>Ana Rol</label>
-      <select id="reg-role"><option value="Duelist">Duelist</option><option value="Controller">Controller</option><option value="Initiator">Initiator</option><option value="Sentinel">Sentinel</option><option value="Flex">Flex</option></select>
+      <select id="reg-role">
+        <option value="Duelist">Duelist</option>
+        <option value="Controller">Controller</option>
+        <option value="Initiator">Initiator</option>
+        <option value="Sentinel">Sentinel</option>
+        <option value="Flex">Flex</option>
+      </select>
     </div>
     <div class="form-group"><label>Şifre</label><input type="password" id="reg-pass"></div>
     <div class="form-group"><label>Şifre (Tekrar)</label><input type="password" id="reg-pass2"></div>
-    <button class="btn-hero btn-hero-primary btn-full" onclick="register()">Hesap Oluştur (100 Puan Hediye!)</button>
+    <button class="btn-hero btn-hero-primary btn-full" onclick="register()">Hesap Oluştur</button>
   </div>
 </div>
 
-<!-- GIVEAWAY PAGE -->
 <div id="page-giveaway" class="page">
   <div class="page-header"><h2>🎁 ÇEKİLİŞ</h2></div>
   <div class="points-card">
@@ -144,10 +150,10 @@
       <div class="points-value points-value-green" id="user-tickets">0</div>
     </div>
   </div>
-  <button class="btn-hero btn-hero-primary btn-full btn-large-action" onclick="joinGiveawayWithPoints()"> 100 Puan Harca ve 1 Bilet Al</button>
+  <button class="btn-hero btn-hero-primary btn-full btn-large-action" onclick="joinGiveawayWithPoints()">🎯 100 Puan Harca ve 1 Bilet Al</button>
   <div class="action-cards">
     <div class="action-card">
-      <div class="action-icon"></div>
+      <div class="action-icon">📺</div>
       <h4>Reklam İzle</h4>
       <p>Kısa bir reklam izleyerek anında +50 Puan kazan!</p>
       <button class="btn-hero btn-hero-success btn-full" onclick="watchAd()">Reklam İzle (+50 Puan)</button>
@@ -161,54 +167,36 @@
     </div>
   </div>
   <div class="participants-section">
-    <h3> Çekilişe Katılanlar Listesi</h3>
+    <h3>📋 Çekilişe Katılanlar Listesi</h3>
     <div id="giveaway-participants-list"></div>
   </div>
 </div>
 
-<!-- ADMIN PAGE -->
 <div id="page-admin" class="page">
   <div class="page-header"><h2>🛡️ Admin Paneli</h2></div>
-  
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchAdminTab('dashboard')">📊 Dashboard</button>
     <button class="admin-tab" onclick="switchAdminTab('users')">👥 Kullanıcılar</button>
     <button class="admin-tab" onclick="switchAdminTab('codes')">🎟️ Kod Yönetimi</button>
-    <button class="admin-tab" onclick="switchAdminTab('ads')"> Reklamlar</button>
-    <button class="admin-tab" onclick="switchAdminTab('settings')">⚙️ Site Ayarları</button>
+    <button class="admin-tab" onclick="switchAdminTab('ads')">📢 Reklamlar</button>
+    <button class="admin-tab" onclick="switchAdminTab('settings')">️ Site Ayarları</button>
   </div>
-
-  <!-- DASHBOARD TAB -->
   <div id="admin-tab-dashboard" class="admin-tab-content active">
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-icon"></div><div class="stat-value" id="stat-users">0</div><div class="stat-label">Toplam Kullanıcı</div></div>
-      <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="stat-rooms">0</div><div class="stat-label">Aktif İlan</div></div>
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-users">0</div><div class="stat-label">Toplam Kullanıcı</div></div>
+      <div class="stat-card"><div class="stat-icon"></div><div class="stat-value" id="stat-rooms">0</div><div class="stat-label">Aktif İlan</div></div>
       <div class="stat-card"><div class="stat-icon">🎟️</div><div class="stat-value" id="stat-participants">0</div><div class="stat-label">Çekiliş Katılımcısı</div></div>
       <div class="stat-card"><div class="stat-icon">🚫</div><div class="stat-value" id="stat-banned">0</div><div class="stat-label">Banlı Kullanıcı</div></div>
-      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="stat-points">0</div><div class="stat-label">Toplam Puan</div></div>
-      <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-value" id="stat-tickets">0</div><div class="stat-label">Toplam Bilet</div></div>
     </div>
     <div class="admin-grid-2">
-      <div class="admin-panel-box">
-        <h3>🆕 Son Kayıt Olanlar</h3>
-        <div id="recent-users-list"></div>
-      </div>
-      <div class="admin-panel-box">
-        <h3>📝 Son Oluşturulan İlanlar</h3>
-        <div id="recent-rooms-list"></div>
-      </div>
+      <div class="admin-panel-box"><h3>🆕 Son Kayıt Olanlar</h3><div id="recent-users-list"></div></div>
+      <div class="admin-panel-box"><h3>📝 Son İlanlar</h3><div id="recent-rooms-list"></div></div>
     </div>
   </div>
-
-  <!-- USERS TAB -->
   <div id="admin-tab-users" class="admin-tab-content">
-    <div class="admin-toolbar">
-      <input type="text" id="user-search" placeholder="Kullanıcı ara..." class="search-input" oninput="filterUsers()">
-    </div>
+    <div class="admin-toolbar"><input type="text" id="user-search" placeholder="Kullanıcı ara..." class="search-input" oninput="filterUsers()"></div>
     <div id="admin-users-list"></div>
   </div>
-
-  <!-- CODES TAB -->
   <div id="admin-tab-codes" class="admin-tab-content">
     <div class="admin-panel-box">
       <h3>➕ Yeni Kod Oluştur</h3>
@@ -219,13 +207,8 @@
       </div>
       <button class="btn-hero btn-hero-primary" onclick="createPromoCode()">Kodu Oluştur</button>
     </div>
-    <div class="admin-panel-box" style="margin-top:20px;">
-      <h3>🎟️ Aktif Kodlar</h3>
-      <div id="admin-codes-list"></div>
-    </div>
+    <div class="admin-panel-box" style="margin-top:20px;"><h3>🎟️ Aktif Kodlar</h3><div id="admin-codes-list"></div></div>
   </div>
-
-  <!-- ADS TAB -->
   <div id="admin-tab-ads" class="admin-tab-content">
     <div class="admin-panel-box">
       <h3>➕ Yeni Reklam Ekle</h3>
@@ -234,32 +217,15 @@
       <div class="form-group"><label>Görsel URL (opsiyonel)</label><input type="text" id="ad-image" placeholder="https://..."></div>
       <button class="btn-hero btn-hero-primary" onclick="createAd()">Reklamı Ekle</button>
     </div>
-    <div class="admin-panel-box" style="margin-top:20px;">
-      <h3> Tüm Reklamlar</h3>
-      <div id="admin-ads-list"></div>
-    </div>
+    <div class="admin-panel-box" style="margin-top:20px;"><h3>📢 Tüm Reklamlar</h3><div id="admin-ads-list"></div></div>
   </div>
-
-  <!-- SETTINGS TAB -->
   <div id="admin-tab-settings" class="admin-tab-content">
     <div class="admin-panel-box">
       <h3>🏠 Ana Sayfa Ayarları</h3>
-      <div class="form-group" style="margin-top:15px;"><label>Site Başlığı (Logo)</label><input type="text" id="set-site-title" placeholder="VALOTAKIM"></div>
-      <div class="form-group"><label>Hero Badge Metni</label><input type="text" id="set-hero-badge" placeholder="🎮 TROLLERDEN KURTUL..."></div>
-      <div class="form-group"><label>Hero Başlık</label><input type="text" id="set-hero-title" placeholder="TAKIMINI BUL!"></div>
-      <div class="form-group"><label>Hero Alt Başlık (HTML destekler)</label><input type="text" id="set-hero-subtitle" placeholder="OYUNA GİR!<br>KEYİFLE KAZAN!"></div>
-    </div>
-    <div class="admin-panel-box" style="margin-top:20px;">
-      <h3>🎁 Çekiliş Ayarları</h3>
-      <div class="form-group" style="margin-top:15px;"><label>Çekiliş Tarihi</label><input type="text" id="set-giveaway-date" placeholder="30 EYLÜL 2026"></div>
-      <div class="form-group"><label>Ödül</label><input type="text" id="set-giveaway-prize" placeholder="825 VK"></div>
-    </div>
-    <div class="admin-panel-box" style="margin-top:20px;">
-      <h3>📺 YouTube & Reklam Ayarları</h3>
-      <div class="form-group" style="margin-top:15px;"><label>YouTube Kanal Adı</label><input type="text" id="set-youtube-channel" placeholder="SMOKGG"></div>
-      <div class="form-group"><label>YouTube Kanal URL</label><input type="text" id="set-youtube-url" placeholder="https://www.youtube.com/..."></div>
-      <div class="form-group"><label>Reklam Başlığı</label><input type="text" id="set-ad-title" placeholder="SMOKGG YouTube Kanalına Abone Ol!"></div>
-      <div class="form-group"><label>Reklam URL</label><input type="text" id="set-ad-url" placeholder="https://..."></div>
+      <div class="form-group" style="margin-top:15px;"><label>Site Başlığı</label><input type="text" id="set-site-title" placeholder="VALOTAKIM"></div>
+      <div class="form-group"><label>Hero Badge</label><input type="text" id="set-hero-badge"></div>
+      <div class="form-group"><label>Hero Başlık</label><input type="text" id="set-hero-title"></div>
+      <div class="form-group"><label>Hero Alt Başlık</label><input type="text" id="set-hero-subtitle"></div>
     </div>
     <button class="btn-hero btn-hero-primary btn-full" style="margin-top:20px;" onclick="saveSettings()">💾 Tüm Ayarları Kaydet</button>
   </div>
@@ -269,12 +235,28 @@
 <div id="create-room-modal" class="modal">
   <div class="modal-content">
     <h2>📝 Yeni İlan Oluştur</h2>
+    <div class="form-group"><label>Kaç Kişi Lazım?</label>
+      <select id="room-team-size">
+        <option value="2">2 Kişi Lazım (1 Kişi + 1)</option>
+        <option value="3">3 Kişi Lazım (1 Kişi + 2)</option>
+        <option value="4">4 Kişi Lazım (1 Kişi + 3)</option>
+        <option value="5" selected>5 Kişi Lazım (1 Kişi + 4)</option>
+      </select>
+    </div>
     <div class="form-group"><label>Ajan Seçimi (En Fazla 3)</label><div id="agent-picker" class="agent-picker-grid"></div></div>
     <div class="form-group"><label>Oyun Modu</label>
-      <select id="room-mode"><option value="Dereceli">Dereceli</option><option value="Derecesiz">Derecesiz</option><option value="Rekabetçi">Rekabetçi</option></select>
+      <select id="room-mode">
+        <option value="Dereceli">Dereceli</option>
+        <option value="Derecesiz">Derecesiz</option>
+        <option value="Rekabetçi">Rekabetçi</option>
+      </select>
     </div>
     <div class="form-group"><label>Yaş Sınırı</label>
-      <select id="room-age"><option value="Farketmez">Farketmez</option><option value="16+">16+</option><option value="18+">18+</option></select>
+      <select id="room-age">
+        <option value="Farketmez">Farketmez</option>
+        <option value="16+">16+</option>
+        <option value="18+">18+</option>
+      </select>
     </div>
     <div class="form-group checkbox-group"><label><input type="checkbox" id="room-mic"> Mikrofon Gerekli</label></div>
     <div class="form-group"><label>Takım Şartları / Not</label><textarea id="room-desc" rows="3"></textarea></div>
