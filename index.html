@@ -4,77 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VALOTAKIM - Valorant Oyuncu Eşleştirme</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: #0b0e14; color: #e2e8f0; line-height: 1.6; }
-    a { color: #a855f7; text-decoration: none; }
-    
-    nav { background: #131722; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262c37; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 10px; }
-    .logo { font-size: 24px; font-weight: bold; color: #a855f7; }
-    .nav-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    .nav-btn { background: #262c37; color: #e2e8f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-    .nav-btn:hover { background: #303642; }
-    .nav-btn.primary { background: #a855f7; color: white; }
-    .nav-btn.danger { background: #ef4444; color: white; }
-
-    .page { display: none; max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
-    .page.active { display: block; }
-
-    .hero { text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #1e1b4b 0%, #0b0e14 100%); border-radius: 16px; margin-bottom: 30px; }
-    .hero h1 { font-size: 36px; color: #a855f7; margin-bottom: 10px; }
-    .hero p { font-size: 18px; color: #94a3b8; margin-bottom: 20px; }
-    .hero-btns { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-    .btn-large { padding: 12px 24px; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-    .btn-purple { background: #a855f7; color: white; }
-    .btn-green { background: #10b981; color: white; }
-
-    .giveaway-banner { background: #1e293b; border: 1px solid #a855f7; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 30px; }
-    
-    .form-container { max-width: 450px; margin: 0 auto; background: #131722; padding: 30px; border-radius: 12px; border: 1px solid #262c37; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 14px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: #0b0e14; border: 1px solid #303642; border-radius: 6px; color: #e2e8f0; }
-    .btn-submit { width: 100%; padding: 12px; background: #a855f7; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .btn-submit:hover { background: #9333ea; }
-
-    .rooms-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-    .room-card-custom { background: #131722; border: 1px solid #262c37; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-    .room-left-info { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .room-user-avatar { width: 40px; height: 40px; background: #a855f7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
-    .room-username-txt { font-weight: bold; font-size: 16px; }
-    .room-rank-txt { color: #94a3b8; font-size: 13px; margin-left: 8px; }
-    .room-middle-agents { display: flex; gap: 5px; margin: 10px 0; flex-wrap: wrap; }
-    .mini-agent-img { width: 32px; height: 32px; border-radius: 4px; background: #262c37; }
-    .badge { display: inline-block; padding: 4px 10px; background: #262c37; border-radius: 20px; font-size: 12px; color: #e2e8f0; margin-right: 5px; }
-    .badge.green { background: #14532d; color: #4ade80; }
-    .badge.red { background: #450a0a; color: #ef4444; }
-    
-    .participant-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-    .participant-avatar { width: 30px; height: 30px; background: #303642; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
-    
-    .btn-green-accept { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-    .btn-red-reject { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-
-    .room-chat-box { background: #0b0e14; padding: 15px; border-radius: 8px; margin-top: 15px; }
-    .chat-messages-area { max-height: 150px; overflow-y: auto; margin-bottom: 10px; }
-    .chat-msg-item { font-size: 13px; margin-bottom: 5px; color: #cbd5e1; }
-    .chat-input-row { display: flex; gap: 10px; }
-    .chat-input-row input { flex: 1; padding: 8px; background: #131722; border: 1px solid #303642; border-radius: 6px; color: white; }
-
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-    .modal.active { display: flex; }
-    .modal-content { background: #131722; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; border: 1px solid #a855f7; }
-    
-    .agent-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin: 15px 0; }
-    .agent-pick-box { background: #262c37; border: 2px solid transparent; border-radius: 8px; padding: 5px; text-align: center; cursor: pointer; position: relative; }
-    .agent-pick-box.selected { border-color: #a855f7; background: #1e1b4b; }
-    .agent-pick-box img { width: 100%; height: auto; border-radius: 4px; }
-    .agent-name-label { font-size: 10px; display: block; margin-top: 2px; }
-    .pick-badge { position: absolute; top: -5px; right: -5px; background: #a855f7; color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; }
-
-    .match-team-card { background: #1e293b; padding: 20px; border-radius: 12px; margin-top: 20px; }
-    .match-team-member { display: flex; justify-content: space-between; padding: 10px; background: #0b0e14; border-radius: 8px; margin-bottom: 8px; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -96,12 +26,14 @@
 <!-- HOME PAGE -->
 <div id="page-home" class="page active">
   <div class="hero">
-    <h1>TAKIMINI BUL! OYUNA GİR! KEYİFLE KAZAN!</h1>
+    <h1>🎮 TROLLERDEN KURTUL • KARA LİSTEYE EKLE</h1>
+    <h2>TAKIMINI BUL! OYUNA GİR! KEYİFLE KAZAN!</h2>
     <p>Tek oyuncu ara veya birbirini tanımayan 5 oyuncuyla yeni bir takım oluştur. Rank bazlı akıllı eşleştirme ile tam sana göre takım!</p>
     <div class="hero-btns">
       <button class="btn-large btn-purple" onclick="switchPage('rooms')">🔍 1 Kişi Lazım</button>
       <button class="btn-large btn-green" onclick="switchPage('matchmaking')">⚡ 5'li Takım Bul</button>
     </div>
+    <p style="margin-top:20px; font-size:14px; color:#94a3b8;">Bu uygulama <a href="https://www.youtube.com/@SmokGG01" target="_blank" style="color:#a855f7; font-weight:bold;">SMOKGG</a> YouTube Kanalı aboneleri için özel olarak yapılmıştır.</p>
   </div>
 
   <div class="giveaway-banner">
@@ -118,7 +50,7 @@
     <h2>🔍 TAKIM İLANLARI</h2>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
       <select id="room-filter" onchange="loadRooms()" style="padding:8px; background:#131722; color:white; border:1px solid #303642; border-radius:6px;">
-        <option value="all">Tüm Roller</option>
+        <option value="all">Tüm Rollerin İlanları</option>
         <option value="Duelist">Duelist</option>
         <option value="Controller">Controller</option>
         <option value="Initiator">Initiator</option>
@@ -144,27 +76,11 @@
 <div id="page-profile" class="page">
   <h2>👤 Profilim</h2>
   <div class="form-container" style="max-width:500px;">
-    <div class="form-group">
-      <label>Kullanıcı Adı</label>
-      <input type="text" id="prof-username" disabled>
-    </div>
-    <div class="form-group">
-      <label>Valorant ID (İsim#Etiket)</label>
-      <input type="text" id="prof-valorant">
-    </div>
-    <div class="form-group">
-      <label>Rank</label>
-      <select id="prof-rank"></select>
-    </div>
-    <div class="form-group">
-      <label>Ana Rol</label>
-      <select id="prof-role">
-        <option value="Duelist">Duelist</option>
-        <option value="Controller">Controller</option>
-        <option value="Initiator">Initiator</option>
-        <option value="Sentinel">Sentinel</option>
-        <option value="Flex">Flex</option>
-      </select>
+    <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="prof-username" disabled></div>
+    <div class="form-group"><label>Valorant ID</label><input type="text" id="prof-valorant"></div>
+    <div class="form-group"><label>Rank</label><select id="prof-rank"></select></div>
+    <div class="form-group"><label>Ana Rol</label>
+      <select id="prof-role"><option value="Duelist">Duelist</option><option value="Controller">Controller</option><option value="Initiator">Initiator</option><option value="Sentinel">Sentinel</option><option value="Flex">Flex</option></select>
     </div>
     <button class="btn-submit" onclick="updateProfile()">Bilgileri Güncelle</button>
   </div>
@@ -174,14 +90,8 @@
 <div id="page-login" class="page">
   <h2>🔐 Giriş Yap</h2>
   <div class="form-container">
-    <div class="form-group">
-      <label>Kullanıcı Adı</label>
-      <input type="text" id="login-user">
-    </div>
-    <div class="form-group">
-      <label>Şifre</label>
-      <input type="password" id="login-pass">
-    </div>
+    <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="login-user"></div>
+    <div class="form-group"><label>Şifre</label><input type="password" id="login-pass"></div>
     <button class="btn-submit" onclick="login()">Giriş Yap</button>
     <p style="text-align:center; margin-top:15px; color:#94a3b8;">Hesabın yok mu? <a href="#" onclick="switchPage('register')">Kayıt Ol</a></p>
   </div>
@@ -191,42 +101,17 @@
 <div id="page-register" class="page">
   <h2>📝 Kayıt Ol</h2>
   <div class="form-container">
-    <div class="form-group">
-      <label>Kullanıcı Adı</label>
-      <input type="text" id="reg-user">
-    </div>
+    <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="reg-user"></div>
     <div style="display:flex; gap:10px;">
-      <div class="form-group" style="flex:2;">
-        <label>Valorant İsim</label>
-        <input type="text" id="reg-valname" placeholder="Örn: Smok">
-      </div>
-      <div class="form-group" style="flex:1;">
-        <label>Etiket</label>
-        <input type="text" id="reg-valtag" placeholder="Örn: 1234">
-      </div>
+      <div class="form-group" style="flex:2;"><label>Valorant İsim</label><input type="text" id="reg-valname" placeholder="Örn: Smok"></div>
+      <div class="form-group" style="flex:1;"><label>Etiket</label><input type="text" id="reg-valtag" placeholder="Örn: 1234"></div>
     </div>
-    <div class="form-group">
-      <label>Rank</label>
-      <select id="reg-rank"></select>
+    <div class="form-group"><label>Rank</label><select id="reg-rank"></select></div>
+    <div class="form-group"><label>Ana Rol</label>
+      <select id="reg-role"><option value="Duelist">Duelist</option><option value="Controller">Controller</option><option value="Initiator">Initiator</option><option value="Sentinel">Sentinel</option><option value="Flex">Flex</option></select>
     </div>
-    <div class="form-group">
-      <label>Ana Rol</label>
-      <select id="reg-role">
-        <option value="Duelist">Duelist</option>
-        <option value="Controller">Controller</option>
-        <option value="Initiator">Initiator</option>
-        <option value="Sentinel">Sentinel</option>
-        <option value="Flex">Flex</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Şifre</label>
-      <input type="password" id="reg-pass">
-    </div>
-    <div class="form-group">
-      <label>Şifre (Tekrar)</label>
-      <input type="password" id="reg-pass2">
-    </div>
+    <div class="form-group"><label>Şifre</label><input type="password" id="reg-pass"></div>
+    <div class="form-group"><label>Şifre (Tekrar)</label><input type="password" id="reg-pass2"></div>
     <button class="btn-submit" onclick="register()">Hesap Oluştur</button>
   </div>
 </div>
@@ -257,39 +142,25 @@
 <div id="create-room-modal" class="modal">
   <div class="modal-content">
     <h2>📝 Yeni İlan Oluştur</h2>
-    <div class="form-group">
-      <label>Ajan Seçimi (En Fazla 3)</label>
-      <div id="agent-picker" class="agent-picker-grid"></div>
+    <div class="form-group"><label>Ajan Seçimi (En Fazla 3)</label><div id="agent-picker" class="agent-picker-grid"></div></div>
+    <div class="form-group"><label>Oyun Modu</label>
+      <select id="room-mode"><option value="Dereceli">Dereceli</option><option value="Derecesiz">Derecesiz</option><option value="Rekabetçi">Rekabetçi</option></select>
     </div>
-    <div class="form-group">
-      <label>Oyun Modu</label>
-      <select id="room-mode">
-        <option value="Dereceli">Dereceli</option>
-        <option value="Derecesiz">Derecesiz</option>
-        <option value="Rekabetçi">Rekabetçi</option>
-      </select>
+    <div class="form-group"><label>Yaş Sınırı</label>
+      <select id="room-age"><option value="Farketmez">Farketmez</option><option value="16+">16+</option><option value="18+">18+</option></select>
     </div>
-    <div class="form-group">
-      <label>Yaş Sınırı</label>
-      <select id="room-age">
-        <option value="Farketmez">Farketmez</option>
-        <option value="16+">16+</option>
-        <option value="18+">18+</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label><input type="checkbox" id="room-mic"> Mikrofon Gerekli</label>
-    </div>
-    <div class="form-group">
-      <label>Takım Şartları / Not</label>
-      <textarea id="room-desc" rows="3"></textarea>
-    </div>
+    <div class="form-group"><label><input type="checkbox" id="room-mic"> Mikrofon Gerekli</label></div>
+    <div class="form-group"><label>Takım Şartları / Not</label><textarea id="room-desc" rows="3"></textarea></div>
     <div style="display:flex; gap:10px;">
       <button class="btn-submit" style="background:#10b981;" onclick="createRoom()">İlanı Yayınla</button>
       <button class="btn-submit" style="background:#ef4444;" onclick="closeCreateRoom()">İptal</button>
     </div>
   </div>
 </div>
+
+<footer style="text-align:center; padding:30px; color:#666e7b; font-size:14px; border-top:1px solid #262c37; margin-top:50px;">
+  VALOTAKIM © 2026 - Tüm hakları saklıdır.
+</footer>
 
 <script src="app.js"></script>
 </body>
