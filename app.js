@@ -84,6 +84,11 @@ function switchPage(pageId) {
   if (pageId === 'home') loadHomeGiveawayParticipants();
 }
 
+function toggleMobileMenu() {
+  const navLinks = document.querySelector('.nav-links');
+  if (navLinks) navLinks.classList.toggle('active');
+}
+
 async function checkAuthState() {
   const token = getToken();
   if (!token) { showLoggedOut(); return; }
@@ -161,7 +166,7 @@ async function login() {
   const username = document.getElementById('login-user').value.trim();
   const password = document.getElementById('login-pass').value;
   if (!username || !password) { alert('Kullanıcı adı ve şifre gerekli!'); return; }
-  
+
   const data = await fetch(API_URL + '/login', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
@@ -212,11 +217,11 @@ async function loadRooms() {
   const container = document.getElementById('rooms-list');
   if (!container) return;
   if (!data.success || !data.rooms) { container.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:40px;">Yüklenemedi</p>'; return; }
-  
+
   const filter = document.getElementById('room-filter')?.value || 'all';
   let rooms = data.rooms;
   if (filter !== 'all') rooms = rooms.filter(r => r.owner_role === filter);
-  
+
   if (rooms.length === 0) {
     container.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:40px;">Henüz ilan yok. İlk ilan sen oluştur!</p>';
     return;
@@ -228,65 +233,61 @@ function renderRoomCard(room) {
   const isOwner = currentUser && room.user_id === currentUser.id;
   const isAdmin = currentUser?.is_admin;
   const isJoined = currentUser && room.participants.includes(currentUser.username);
-  
+
   const agentsHtml = room.agents.map(a => {
     const ag = AGENTS.find(x => x.name === a);
-    return ag ? `<img src="${ag.img}" class="mini-agent-img" title="${a}" onerror="this.style.display='none'">` : '';
+    return ag ? `<img src="${ag.img}" class="agent-img" title="${a}" onerror="this.style.display='none'">` : '';
   }).join('');
 
   const chatHtml = room.messages.map(m =>
-    `<div class="chat-msg-item"><b>${m.sender}</b> (${new Date(m.time).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}): ${m.text}</div>`
+    `<div class="chat-msg"><b>${m.sender}</b> (${new Date(m.time).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}): ${m.text}</div>`
   ).join('');
 
   const participantsHtml = room.participants.map(p =>
-    `<div class="participant-row"><div class="participant-info"><div class="participant-avatar">${p[0].toUpperCase()}</div><span>${p}</span></div></div>`
+    `<div class="participant-row"><div class="participant-avatar">${p[0].toUpperCase()}</div><span>${p}</span></div>`
   ).join('');
 
   setTimeout(() => startCountdown(room.id, room.expires_at), 50);
 
   return `
-    <div class="room-card-custom">
-      <div class="room-left-info">
-        <div class="room-user-avatar">${room.username[0].toUpperCase()}</div>
-        <div>
-          <span class="room-username-txt">${room.username}</span>
-          <span class="room-rank-txt">${room.rank} • ${room.owner_valorant_id}</span>
+    <div class="room-card">
+      <div class="room-header">
+        <div class="room-avatar">${room.username[0].toUpperCase()}</div>
+        <div class="room-user-info">
+          <div class="room-username">${room.username}</div>
+          <div class="room-rank">${room.rank} • ${room.owner_valorant_id}</div>
         </div>
       </div>
-      <div id="countdown-${room.id}" style="font-size:14px; margin:6px 0;">⏱ --:--</div>
-      <div class="room-middle-agents">${agentsHtml || '<span style="color:#666e7b; font-size:12px;">Ajan seçilmedi</span>'}</div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <div id="countdown-${room.id}" class="room-countdown">⏱ --:--</div>
+      <div class="room-agents">${agentsHtml || '<span style="color:#64748b; font-size:12px;">Ajan seçilmedi</span>'}</div>
+      <div class="room-badges">
         <span class="badge">${room.mode}</span>
         <span class="badge">${room.age}</span>
-        <span class="badge ${room.microphone ? 'green' : 'red'}">${room.microphone ? '🎤 Mikrofon: EVET' : '🔇 Mikrofon: HAYIR'}</span>
+        <span class="badge ${room.microphone ? 'badge-green' : 'badge-red'}">${room.microphone ? '🎤 Mikrofon: EVET' : ' Mikrofon: HAYIR'}</span>
       </div>
-      ${room.description ? `<p style="color:#cbd5e1; font-size:13px; background:#090b10; padding:10px; border-radius:8px;">${room.description}</p>` : ''}
-      
-      <div style="border-top:1px solid #262c37; padding-top:12px;">
-        <h4 style="font-size:13px; margin-bottom:8px; color:#a855f7;">👥 Katılımcılar (${room.participants.length + 1}/5)</h4>
-        <div class="participants-management-list">
-          <div class="participant-row">
-            <div class="participant-info">
-              <div class="participant-avatar" style="background:#ef4444;">${room.username[0].toUpperCase()}</div>
-              <span><b>${room.username}</b> (Kurucu)</span>
-            </div>
-          </div>
-          ${participantsHtml}
+      ${room.description ? `<div class="room-desc">${room.description}</div>` : ''}
+
+      <div class="room-participants">
+        <h4>👥 Katılımcılar (${room.participants.length + 1}/5)</h4>
+        <div class="participant-row">
+          <div class="participant-avatar" style="background:#ef4444;">${room.username[0].toUpperCase()}</div>
+          <span><b>${room.username}</b> (Kurucu)</span>
         </div>
+        ${participantsHtml}
       </div>
 
-      <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-        ${!isOwner && !isJoined ? `<button class="btn-green-accept" onclick="joinRoom(${room.id})">+ Katıl</button>` : ''}
-        ${isJoined ? `<span class="badge" style="background:#1a3a2a; color:#4ade80;">✓ Katıldın</span>` : ''}
-        ${(isOwner || isAdmin) ? `<button class="btn-red-reject" onclick="deleteRoom(${room.id})">🗑️ Sil</button>` : ''}
+      <div class="room-actions">
+        ${!isOwner && !isJoined ? `<button class="btn-hero btn-hero-success" onclick="joinRoom(${room.id})">+ Katıl</button>` : ''}
+        ${isJoined ? `<span class="badge badge-green">✓ Katıldın</span>` : ''}
+        ${(isOwner || isAdmin) ? `<button class="btn-hero btn-hero-danger" onclick="deleteRoom(${room.id})">️ Sil</button>` : ''}
       </div>
 
-      <div class="room-chat-box" style="margin-top:10px;">
-        <h4 style="font-size:13px; color:#a855f7;">💬 Sohbet</h4>
-        <div class="chat-messages-area" id="chat-${room.id}">${chatHtml || '<p style="color:#666e7b; font-size:12px;">Henüz mesaj yok</p>'}</div>
+      <div class="room-chat">
+        <h4>💬 Sohbet</h4>
+        <div class="chat-messages" id="chat-${room.id}">${chatHtml || '<p style="color:#64748b; font-size:12px;">Henüz mesaj yok</p>'}</div>
         <div class="chat-input-row">
           <input type="text" id="msg-${room.id}" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') sendMessage(${room.id})">
-          <button class="btn-green-accept" onclick="sendMessage(${room.id})">Gönder</button>
+          <button class="btn-hero btn-hero-success" onclick="sendMessage(${room.id})">Gönder</button>
         </div>
       </div>
     </div>`;
@@ -329,7 +330,7 @@ async function createRoom() {
   const age = document.getElementById('room-age').value;
   const description = document.getElementById('room-desc').value;
   const microphone = document.getElementById('room-mic').checked;
-  
+
   const data = await apiFetch('/rooms', {
     method: 'POST', body: JSON.stringify({ mode, age, description, agents: selectedAgents, microphone })
   });
@@ -366,7 +367,7 @@ async function startMatchmaking() {
   const btn = document.getElementById('match-btn');
   const status = document.getElementById('match-status');
   const result = document.getElementById('match-result');
-  
+
   btn.disabled = true;
   btn.textContent = 'Aranıyor...';
   result.innerHTML = '';
@@ -378,8 +379,8 @@ async function startMatchmaking() {
       clearInterval(matchmakingInterval);
       btn.disabled = false;
       btn.textContent = 'Eşleşme Ara';
-      status.innerHTML = '<p style="color:#4ade80; font-weight:800; font-size:18px;">✅ TAKIM BULUNDU!</p>';
-      result.innerHTML = `<div class="match-team-card"> <h3 style="color:#a855f7; margin-bottom:15px;">🎉 5'li Takımın Hazır!</h3> ${data.team.map(t => `<div class="match-team-member"> <span><b>${t.username}</b></span> <span style="color:#a855f7;">${t.rank} • ${t.role}</span> </div>`).join('')} <button class="btn-large btn-purple" style="margin-top:15px; width:100%;" onclick="switchPage('rooms')">📋 Takım İlanını Gör</button> </div>`;
+      status.innerHTML = '<p style="color:#10b981; font-weight:800; font-size:18px;">✅ TAKIM BULUNDU!</p>';
+      result.innerHTML = `<div class="match-team-card"> <h3>🎉 5'li Takımın Hazır!</h3> ${data.team.map(t => `<div class="match-team-member"> <span><b>${t.username}</b></span> <span style="color:#a855f7;">${t.rank} • ${t.role}</span> </div>`).join('')} <button class="btn-hero btn-hero-primary btn-full" style="margin-top:15px;" onclick="switchPage('rooms')">📋 Takım İlanını Gör</button> </div>`;
     } else {
       status.innerHTML = `<p style="margin-top:15px; color:#a855f7;">Kuyrukta ${data.waiting}/5 kişi bekliyor...</p>`;
     }
@@ -396,7 +397,7 @@ async function loadGiveawayParticipants() {
     container.innerHTML = `<p style="color:#94a3b8; text-align:center; padding:20px;">Henüz kimse katılmadı. İlk katılan sen ol!</p>`;
     return;
   }
-  container.innerHTML = data.participants.map((p, i) => `<div style="background:#131722; padding:10px 15px; border-radius:8px; border:1px solid #303642; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"> <span style="font-weight:700; color:#a855f7;">#${i + 1} - ${p.username}</span> <span style="font-size:12px; color:#4ade80;">Katıldı ✓</span> </div>`).join('');
+  container.innerHTML = data.participants.map((p, i) => `<div class="participant-item"> <span class="name">#${i + 1} - ${p.username}</span> <span class="status">Katıldı ✓</span> </div>`).join('');
 }
 
 async function loadHomeGiveawayParticipants() {
@@ -404,13 +405,12 @@ async function loadHomeGiveawayParticipants() {
   if (!container) return;
   const data = await fetch(API_URL + '/giveaway').then(r => r.json());
   if (!data.success || data.participants.length === 0) {
-    container.innerHTML = `<p style="color:#94a3b8; font-size:12px; text-align:center; padding:10px;">Henüz katılan yok.</p>`;
+    container.innerHTML = `<p style="color:#64748b; font-size:12px; text-align:center; padding:10px;">Henüz katılan yok.</p>`;
     return;
   }
-  container.innerHTML = data.participants.slice(0, 10).map((p, i) => `<div class="participant-item-row" style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;"> <span>#${i + 1} - ${p.username}</span> <span style="color:#4ade80; font-size:11px;">✓</span> </div>`).join('');
+  container.innerHTML = data.participants.slice(0, 10).map((p, i) => `<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;"> <span>#${i + 1} - ${p.username}</span> <span style="color:#10b981; font-size:11px;">✓</span> </div>`).join('');
 }
 
-// --- YENİ ÇEKİLİŞ FONKSİYONLARI ---
 async function joinGiveawayWithPoints() {
   if (!getToken()) { alert('Çekilişe katılabilmek için önce giriş yapmalısınız!'); switchPage('login'); return; }
   const data = await apiFetch('/giveaway/join', { method: 'POST' });
@@ -458,13 +458,12 @@ async function redeemPromoCode() {
   }
 }
 
-// --- ADMIN ---
 async function loadAdminRooms() {
   if (!currentUser?.is_admin) { alert('Admin değilsiniz!'); switchPage('home'); return; }
   const data = await apiFetch('/admin/rooms');
   const container = document.getElementById('admin-rooms-list');
   if (!data.success || data.rooms.length === 0) { container.innerHTML = '<p style="color:#94a3b8;">Aktif ilan yok.</p>'; return; }
-  container.innerHTML = data.rooms.map(r => `<div style="background:#131722; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid #303642;"> <div> <b style="color:#a855f7;">#${r.id}</b> - ${r.username} • ${r.mode} • ${r.age} <div style="font-size:12px; color:#94a3b8;">Katılımcı: ${(r.participant_count || 0) + 1}</div> </div> <button class="btn-red-reject" onclick="adminDeleteRoom(${r.id})">🗑️ Sil</button> </div>`).join('');
+  container.innerHTML = data.rooms.map(r => `<div class="admin-item"> <div class="admin-item-info"> <b>#${r.id}</b> - ${r.username} • ${r.mode} • ${r.age} <div class="meta">Katılımcı: ${(r.participant_count || 0) + 1}</div> </div> <button class="btn-hero btn-hero-danger" onclick="adminDeleteRoom(${r.id})">🗑️ Sil</button> </div>`).join('');
 }
 
 async function adminDeleteRoom(id) {
@@ -479,7 +478,7 @@ async function loadAdminUsers() {
   const container = document.getElementById('admin-users-list');
   if (!container) return;
   if (!data.success || data.users.length === 0) { container.innerHTML = '<p style="color:#94a3b8;">Kayıtlı kullanıcı yok.</p>'; return; }
-  container.innerHTML = data.users.map(u => `<div style="background:#131722; padding:12px; border-radius:8px; margin-bottom:8px; border:1px solid ${u.is_banned ? '#ef4444' : '#303642'}; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;"> <div> <b style="color:#a855f7;">${u.username}</b> ${u.is_admin ? '<span style="background:#fbbf24; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:4px;">ADMIN</span>' : ''} ${u.is_banned ? `<span style="background:#ef4444; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:4px;">BANLI</span>` : ''} <div style="font-size:12px; color:#94a3b8;">${u.valorant_id || '-'} • ${u.rank} • ${u.role}</div> ${u.ban_reason ? `<div style="font-size:11px; color:#ef4444;">Sebep: ${u.ban_reason}</div>` : ''} </div> <div style="display:flex; gap:6px; flex-wrap:wrap;"> ${u.is_banned ? `<button class="btn-green-accept" onclick="unbanUser(${u.id})">✓ Ban Kaldır</button>` : `<button class="btn-red-reject" onclick="banUser(${u.id})">🚫 Banla</button>`} ${!u.is_admin ? `<button class="badge" style="background:#1e3a8a; color:#60a5fa; cursor:pointer;" onclick="toggleAdmin(${u.id})">⭐ Admin Yap/Al</button>` : ''} </div> </div>`).join('');
+  container.innerHTML = data.users.map(u => `<div class="admin-item ${u.is_banned ? 'banned' : ''}"> <div class="admin-item-info"> <b>${u.username}</b> ${u.is_admin ? '<span class="admin-tag admin-tag-admin">ADMIN</span>' : ''} ${u.is_banned ? '<span class="admin-tag admin-tag-banned">BANLI</span>' : ''} <div class="meta">${u.valorant_id || '-'} • ${u.rank} • ${u.role}</div> ${u.ban_reason ? `<div style="font-size:11px; color:#ef4444; margin-top:4px;">Sebep: ${u.ban_reason}</div>` : ''} </div> <div style="display:flex; gap:6px; flex-wrap:wrap;"> ${u.is_banned ? `<button class="btn-hero btn-hero-success" onclick="unbanUser(${u.id})">✓ Ban Kaldır</button>` : `<button class="btn-hero btn-hero-danger" onclick="banUser(${u.id})">🚫 Banla</button>`} ${!u.is_admin ? `<button class="badge" style="background:#1e3a8a; color:#60a5fa; cursor:pointer;" onclick="toggleAdmin(${u.id})">⭐ Admin Yap/Al</button>` : ''} </div> </div>`).join('');
 }
 
 async function banUser(id) {

@@ -5,49 +5,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VALOTAKIM - Valorant Oyuncu Eşleştirme</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-<nav>
-  <div class="logo">VALOTAKIM</div>
-  <div class="nav-links">
-    <button class="nav-btn" onclick="switchPage('home')">Ana Sayfa</button>
-    <button class="nav-btn" onclick="switchPage('rooms')">İlanlar</button>
-    <button class="nav-btn" onclick="switchPage('matchmaking')">5'li Takım</button>
-    <button class="nav-btn" onclick="switchPage('giveaway')">Çekiliş</button>
-    <button class="nav-btn" id="nav-profile-btn" style="display:none;" onclick="switchPage('profile')">Profilim</button>
-    <button class="nav-btn" id="nav-admin-btn" style="display:none;" onclick="switchPage('admin')">Admin</button>
-    <button class="nav-btn primary" id="nav-login-btn" onclick="switchPage('login')">Giriş Yap</button>
-    <button class="nav-btn primary" id="nav-register-btn" onclick="switchPage('register')">Kayıt Ol</button>
-    <button class="nav-btn danger" id="nav-logout-btn" style="display:none;" onclick="logout()">Çıkış</button>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-container">
+    <div class="logo" onclick="switchPage('home')">VALO<span class="logo-accent">TAKIM</span></div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="switchPage('home')">Ana Sayfa</button>
+      <button class="nav-btn" onclick="switchPage('rooms')">İlanlar</button>
+      <button class="nav-btn" onclick="switchPage('matchmaking')">5'li Takım</button>
+      <button class="nav-btn" onclick="switchPage('giveaway')">Çekiliş</button>
+      <button class="nav-btn" id="nav-profile-btn" style="display:none;" onclick="switchPage('profile')">Profilim</button>
+      <button class="nav-btn" id="nav-admin-btn" style="display:none;" onclick="switchPage('admin')">Admin</button>
+      <button class="nav-btn nav-btn-outline" id="nav-login-btn" onclick="switchPage('login')">Giriş Yap</button>
+      <button class="nav-btn nav-btn-primary" id="nav-register-btn" onclick="switchPage('register')">Kayıt Ol</button>
+      <button class="nav-btn nav-btn-danger" id="nav-logout-btn" style="display:none;" onclick="logout()">Çıkış</button>
+    </div>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
   </div>
 </nav>
 
 <!-- HOME PAGE -->
 <div id="page-home" class="page active">
-  <div class="hero">
-    <h1>🎮 TROLLERDEN KURTUL • KARA LİSTEYE EKLE</h1>
-    <h2>TAKIMINI BUL! OYUNA GİR! KEYİFLE KAZAN!</h2>
-    <p>Tek oyuncu ara veya birbirini tanımayan 5 oyuncuyla yeni bir takım oluştur. Rank bazlı akıllı eşleştirme ile tam sana göre takım!</p>
-    <div class="hero-btns">
-      <button class="btn-large btn-purple" onclick="switchPage('rooms')">🔍 1 Kişi Lazım</button>
-      <button class="btn-large btn-green" onclick="switchPage('matchmaking')">⚡ 5'li Takım Bul</button>
+  <div class="hero-section">
+    <div class="hero-badge">🎮 TROLLERDEN KURTUL • KARA LİSTEYE EKLE</div>
+    <h1 class="hero-title">TAKIMINI BUL!</h1>
+    <h2 class="hero-subtitle">OYUNA GİR!<br>KEYİFLE KAZAN!</h2>
+    <p class="hero-desc">Tek oyuncu ara veya birbirini tanımayan 5 oyuncuyla yeni bir takım oluştur. Rank bazlı akıllı eşleştirme ile tam sana göre takım!</p>
+    <div class="hero-buttons">
+      <button class="btn-hero btn-hero-primary" onclick="switchPage('rooms')">🔍 1 Kişi Lazım</button>
+      <button class="btn-hero btn-hero-outline" onclick="switchPage('matchmaking')">⚡ 5'li Takım Bul</button>
     </div>
-    <p style="margin-top:20px; font-size:14px; color:#94a3b8;">Bu uygulama <a href="https://www.youtube.com/@SmokGG01" target="_blank" style="color:#a855f7; font-weight:bold;">SMOKGG</a> YouTube Kanalı aboneleri için özel olarak yapılmıştır.</p>
+    <div class="hero-footer-box">
+      Bu uygulama <span class="smokgg-link">SMOKGG</span> YouTube Kanalı aboneleri için özel olarak yapılmıştır.
+    </div>
   </div>
+
   <div class="giveaway-banner">
-    <h2>🎁 30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
+    <div class="giveaway-icon">🎁</div>
+    <h2>30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
     <p>Sisteme kayıt ol, puan topla ve ödülü kazanma şansını yakala!</p>
-    <button class="btn-large btn-purple" style="margin-top:15px;" onclick="switchPage('giveaway')">🎯 Çekilişe Git</button>
-    <div id="home-giveaway-participants" style="margin-top:20px; max-width:300px; margin-left:auto; margin-right:auto;"></div>
+    <button class="btn-hero btn-hero-primary" style="margin-top:15px;" onclick="switchPage('giveaway')">🎯 Çekilişe Git</button>
+    <div id="home-giveaway-participants" class="giveaway-mini-list"></div>
   </div>
 </div>
 
 <!-- ROOMS PAGE -->
 <div id="page-rooms" class="page">
-  <div class="rooms-header">
+  <div class="page-header">
     <h2>🔍 TAKIM İLANLARI</h2>
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <select id="room-filter" onchange="loadRooms()" style="padding:8px; background:#131722; color:white; border:1px solid #303642; border-radius:6px;">
+    <div class="page-header-actions">
+      <select id="room-filter" onchange="loadRooms()">
         <option value="all">Tüm Rollerin İlanları</option>
         <option value="Duelist">Duelist</option>
         <option value="Controller">Controller</option>
@@ -55,7 +66,7 @@
         <option value="Sentinel">Sentinel</option>
         <option value="Flex">Flex</option>
       </select>
-      <button class="btn-large btn-purple" onclick="openCreateRoom()">+ İlan Oluştur</button>
+      <button class="btn-hero btn-hero-primary" onclick="openCreateRoom()">+ İlan Oluştur</button>
     </div>
   </div>
   <div id="rooms-list"></div>
@@ -63,44 +74,54 @@
 
 <!-- MATCHMAKING PAGE -->
 <div id="page-matchmaking" class="page">
-  <h2>⚡ 5'Lİ TAKIM BUL</h2>
-  <p style="color:#94a3b8; margin:10px 0;">Profilindeki ranka göre akıllı aralıkta eşleşme yapıyoruz.</p>
-  <button id="match-btn" class="btn-large btn-green" onclick="startMatchmaking()">🔎 Eşleşme Ara</button>
-  <div id="match-status"></div>
-  <div id="match-result"></div>
+  <div class="page-header">
+    <h2> 5'Lİ TAKIM BUL</h2>
+  </div>
+  <div class="matchmaking-card">
+    <p class="matchmaking-desc">Profilindeki ranka göre akıllı aralıkta eşleşme yapıyoruz.</p>
+    <button id="match-btn" class="btn-hero btn-hero-primary" onclick="startMatchmaking()">🔎 Eşleşme Ara</button>
+    <div id="match-status"></div>
+    <div id="match-result"></div>
+  </div>
 </div>
 
 <!-- PROFILE PAGE -->
 <div id="page-profile" class="page">
-  <h2>👤 Profilim</h2>
-  <div class="form-container" style="max-width:500px;">
+  <div class="page-header">
+    <h2>👤 Profilim</h2>
+  </div>
+  <div class="form-card">
     <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="prof-username" disabled></div>
     <div class="form-group"><label>Valorant ID</label><input type="text" id="prof-valorant"></div>
     <div class="form-group"><label>Rank</label><select id="prof-rank"></select></div>
     <div class="form-group"><label>Ana Rol</label>
       <select id="prof-role"><option value="Duelist">Duelist</option><option value="Controller">Controller</option><option value="Initiator">Initiator</option><option value="Sentinel">Sentinel</option><option value="Flex">Flex</option></select>
     </div>
-    <button class="btn-submit" onclick="updateProfile()">Bilgileri Güncelle</button>
+    <button class="btn-hero btn-hero-primary btn-full" onclick="updateProfile()">Bilgileri Güncelle</button>
   </div>
 </div>
 
 <!-- LOGIN PAGE -->
 <div id="page-login" class="page">
-  <h2>🔐 Giriş Yap</h2>
-  <div class="form-container">
+  <div class="page-header">
+    <h2> Giriş Yap</h2>
+  </div>
+  <div class="form-card">
     <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="login-user"></div>
     <div class="form-group"><label>Şifre</label><input type="password" id="login-pass"></div>
-    <button class="btn-submit" onclick="login()">Giriş Yap</button>
-    <p style="text-align:center; margin-top:15px; color:#94a3b8;">Hesabın yok mu? <a href="#" onclick="switchPage('register')">Kayıt Ol</a></p>
+    <button class="btn-hero btn-hero-primary btn-full" onclick="login()">Giriş Yap</button>
+    <p class="form-footer">Hesabın yok mu? <a href="#" onclick="switchPage('register')">Kayıt Ol</a></p>
   </div>
 </div>
 
 <!-- REGISTER PAGE -->
 <div id="page-register" class="page">
-  <h2>📝 Kayıt Ol</h2>
-  <div class="form-container">
+  <div class="page-header">
+    <h2>📝 Kayıt Ol</h2>
+  </div>
+  <div class="form-card">
     <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="reg-user"></div>
-    <div style="display:flex; gap:10px;">
+    <div class="form-row">
       <div class="form-group" style="flex:2;"><label>Valorant İsim</label><input type="text" id="reg-valname" placeholder="Örn: Smok"></div>
       <div class="form-group" style="flex:1;"><label>Etiket</label><input type="text" id="reg-valtag" placeholder="Örn: 1234"></div>
     </div>
@@ -110,63 +131,74 @@
     </div>
     <div class="form-group"><label>Şifre</label><input type="password" id="reg-pass"></div>
     <div class="form-group"><label>Şifre (Tekrar)</label><input type="password" id="reg-pass2"></div>
-    <button class="btn-submit" onclick="register()">Hesap Oluştur (100 Puan Hediye!)</button>
+    <button class="btn-hero btn-hero-primary btn-full" onclick="register()">Hesap Oluştur (100 Puan Hediye!)</button>
   </div>
 </div>
 
 <!-- GIVEAWAY PAGE -->
 <div id="page-giveaway" class="page">
-  <h2>🎁 30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
-  
-  <div class="points-display" style="background:#1e293b; padding:20px; border-radius:12px; text-align:center; margin:20px 0; border:1px solid #a855f7; display:flex; justify-content:space-around; flex-wrap:wrap; gap:15px;">
-    <div>
-      <h3 style="color:#fbbf24; margin:0;">💰 SmokGG Puanınız</h3>
-      <h1 style="color:#fbbf24; margin:5px 0;" id="user-points">0</h1>
+  <div class="page-header">
+    <h2>🎁 30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
+  </div>
+
+  <div class="points-card">
+    <div class="points-item">
+      <div class="points-icon">💰</div>
+      <h3>SmokGG Puanınız</h3>
+      <div class="points-value" id="user-points">0</div>
     </div>
-    <div>
-      <h3 style="color:#4ade80; margin:0;">🎟️ Çekiliş Biletiniz</h3>
-      <h1 style="color:#4ade80; margin:5px 0;" id="user-tickets">0</h1>
+    <div class="points-divider"></div>
+    <div class="points-item">
+      <div class="points-icon">🎟️</div>
+      <h3>Çekiliş Biletiniz</h3>
+      <div class="points-value points-value-green" id="user-tickets">0</div>
     </div>
   </div>
 
-  <button class="btn-large btn-purple" style="width:100%; margin-bottom:20px;" onclick="joinGiveawayWithPoints()">🎯 100 Puan Harca ve 1 Bilet Al (Çekilişe Katıl)</button>
+  <button class="btn-hero btn-hero-primary btn-full btn-large-action" onclick="joinGiveawayWithPoints()">🎯 100 Puan Harca ve 1 Bilet Al (Çekilişe Katıl)</button>
 
-  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px; margin-bottom:30px;">
-    <div style="background:#131722; padding:20px; border-radius:12px; border:1px solid #303642; text-align:center;">
-      <h4 style="color:#a855f7;">📺 Reklam İzle</h4>
-      <p style="font-size:13px; color:#94a3b8; margin:10px 0;">Kısa bir reklam izleyerek anında +50 Puan kazan!</p>
-      <button class="btn-large btn-green" style="font-size:14px; padding:10px; width:100%;" onclick="watchAd()">Reklam İzle (+50 Puan)</button>
+  <div class="action-cards">
+    <div class="action-card">
+      <div class="action-icon">📺</div>
+      <h4>Reklam İzle</h4>
+      <p>Kısa bir reklam izleyerek anında +50 Puan kazan!</p>
+      <button class="btn-hero btn-hero-success btn-full" onclick="watchAd()">Reklam İzle (+50 Puan)</button>
     </div>
 
-    <div style="background:#131722; padding:20px; border-radius:12px; border:1px solid #303642; text-align:center;">
-      <h4 style="color:#a855f7;">🎁 YouTube Kodu Gir</h4>
-      <p style="font-size:13px; color:#94a3b8; margin:10px 0;">SMOKGG videolarındaki kodu gir. İlk 50 kişi için +100 Puan!</p>
-      <input type="text" id="promo-code-input" placeholder="Kodu buraya yaz..." style="width:100%; padding:10px; margin-bottom:10px; background:#0b0e14; border:1px solid #303642; border-radius:6px; color:white; text-align:center;">
-      <button class="btn-large btn-purple" style="font-size:14px; padding:10px; width:100%;" onclick="redeemPromoCode()">Kodu Kullan</button>
+    <div class="action-card">
+      <div class="action-icon">🎁</div>
+      <h4>YouTube Kodu Gir</h4>
+      <p>SMOKGG videolarındaki kodu gir. İlk 50 kişi için +100 Puan!</p>
+      <input type="text" id="promo-code-input" placeholder="Kodu buraya yaz..." class="code-input">
+      <button class="btn-hero btn-hero-primary btn-full" onclick="redeemPromoCode()">Kodu Kullan</button>
     </div>
   </div>
 
-  <h3 style="margin-top:20px;">📋 Çekilişe Katılanlar Listesi</h3>
-  <div id="giveaway-participants-list" style="margin-top:15px;"></div>
+  <div class="participants-section">
+    <h3>📋 Çekilişe Katılanlar Listesi</h3>
+    <div id="giveaway-participants-list"></div>
+  </div>
 </div>
 
 <!-- ADMIN PAGE -->
 <div id="page-admin" class="page">
-  <h2>🛡️ Admin Paneli</h2>
-  <div class="admin-section" style="margin-bottom:30px;">
+  <div class="page-header">
+    <h2>🛡️ Admin Paneli</h2>
+  </div>
+  <div class="admin-section">
     <h3>📋 Aktif İlanlar</h3>
-    <div id="admin-rooms-list" style="margin-top:15px;"></div>
+    <div id="admin-rooms-list"></div>
   </div>
   <div class="admin-section">
     <h3>👥 Üye Yönetimi (Ban/Engelle)</h3>
-    <div id="admin-users-list" style="margin-top:15px;"></div>
+    <div id="admin-users-list"></div>
   </div>
 </div>
 
 <!-- CREATE ROOM MODAL -->
 <div id="create-room-modal" class="modal">
   <div class="modal-content">
-    <h2>📝 Yeni İlan Oluştur</h2>
+    <h2> Yeni İlan Oluştur</h2>
     <div class="form-group"><label>Ajan Seçimi (En Fazla 3)</label><div id="agent-picker" class="agent-picker-grid"></div></div>
     <div class="form-group"><label>Oyun Modu</label>
       <select id="room-mode"><option value="Dereceli">Dereceli</option><option value="Derecesiz">Derecesiz</option><option value="Rekabetçi">Rekabetçi</option></select>
@@ -174,16 +206,16 @@
     <div class="form-group"><label>Yaş Sınırı</label>
       <select id="room-age"><option value="Farketmez">Farketmez</option><option value="16+">16+</option><option value="18+">18+</option></select>
     </div>
-    <div class="form-group"><label><input type="checkbox" id="room-mic"> Mikrofon Gerekli</label></div>
+    <div class="form-group checkbox-group"><label><input type="checkbox" id="room-mic"> Mikrofon Gerekli</label></div>
     <div class="form-group"><label>Takım Şartları / Not</label><textarea id="room-desc" rows="3"></textarea></div>
-    <div style="display:flex; gap:10px;">
-      <button class="btn-submit" style="background:#10b981;" onclick="createRoom()">İlanı Yayınla</button>
-      <button class="btn-submit" style="background:#ef4444;" onclick="closeCreateRoom()">İptal</button>
+    <div class="modal-actions">
+      <button class="btn-hero btn-hero-success" onclick="createRoom()">İlanı Yayınla</button>
+      <button class="btn-hero btn-hero-danger" onclick="closeCreateRoom()">İptal</button>
     </div>
   </div>
 </div>
 
-<footer style="text-align:center; padding:30px; color:#666e7b; font-size:14px; border-top:1px solid #262c37; margin-top:50px;">
+<footer class="footer">
   VALOTAKIM © 2026 - Tüm hakları saklıdır.
 </footer>
 
