@@ -5,8 +5,9 @@ a:hover { color: #c084fc; }
 
 .navbar { background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #1e1e2e; position: sticky; top: 0; z-index: 100; padding: 0 20px; }
 .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }
-.logo { font-size: 24px; font-weight: 900; color: #fff; cursor: pointer; }
-.logo-accent { color: #a855f7; }
+.logo { display: flex; align-items: center; cursor: pointer; }
+.logo-img { height: 40px; width: auto; transition: transform 0.2s; }
+.logo-img:hover { transform: scale(1.05); }
 .nav-links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .nav-btn { background: transparent; color: #94a3b8; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
 .nav-btn:hover { background: #1e1e2e; color: #fff; }
@@ -42,7 +43,6 @@ a:hover { color: #c084fc; }
 .smokgg-link { color: #a855f7; font-weight: 700; }
 
 .giveaway-banner { background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(30, 30, 46, 0.8)); border: 1px solid rgba(168, 85, 247, 0.3); padding: 40px; border-radius: 20px; text-align: center; margin-top: 40px; }
-.giveaway-icon { font-size: 48px; margin-bottom: 15px; }
 .giveaway-banner h2 { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 10px; }
 .giveaway-banner p { color: #94a3b8; font-size: 16px; margin-bottom: 20px; }
 .giveaway-mini-list { margin-top: 20px; max-width: 400px; margin-left: auto; margin-right: auto; }
@@ -62,9 +62,9 @@ a:hover { color: #c084fc; }
 .checkbox-group input[type="checkbox"] { width: auto; accent-color: #a855f7; }
 .form-footer { text-align: center; margin-top: 20px; color: #94a3b8; font-size: 14px; }
 
-/* ROOM CARDS */
-.room-card { background: #12121a; border: 1px solid #1e1e2e; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
-.room-card:hover { border-color: #2e2e3e; }
+/* ROOM CARDS - Modern Tasarım */
+.room-card { background: #12121a; border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 16px; padding: 24px; margin-bottom: 20px; transition: all 0.2s; }
+.room-card:hover { border-color: #a855f7; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(168, 85, 247, 0.1); }
 .room-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
 .room-avatar { width: 44px; height: 44px; background: linear-gradient(135deg, #a855f7, #7c3aed); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 18px; }
 .room-user-info { flex: 1; }
@@ -91,7 +91,6 @@ a:hover { color: #c084fc; }
 .chat-input-row { display: flex; gap: 10px; }
 .chat-input-row input { flex: 1; padding: 10px 14px; background: #12121a; border: 1px solid #2e2e3e; border-radius: 8px; color: #fff; font-size: 14px; }
 
-/* PROFILE AGENT PICKER */
 .agent-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin: 12px 0; }
 .agent-pick-box { background: #1e1e2e; border: 2px solid transparent; border-radius: 10px; padding: 8px; text-align: center; cursor: pointer; position: relative; transition: all 0.2s; }
 .agent-pick-box:hover { background: #2e2e3e; }
@@ -100,7 +99,6 @@ a:hover { color: #c084fc; }
 .agent-name-label { font-size: 10px; display: block; margin-top: 4px; color: #94a3b8; }
 .pick-badge { position: absolute; top: -6px; right: -6px; background: #a855f7; color: #fff; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 
-/* POINTS */
 .points-card { background: #12121a; border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 20px; padding: 30px; display: flex; justify-content: space-around; align-items: center; margin: 30px 0; flex-wrap: wrap; gap: 20px; }
 .points-item { text-align: center; flex: 1; min-width: 150px; }
 .points-icon { font-size: 36px; margin-bottom: 8px; }
@@ -128,12 +126,6 @@ a:hover { color: #c084fc; }
 .match-team-card h3 { color: #a855f7; font-size: 22px; margin-bottom: 20px; }
 .match-team-member { display: flex; justify-content: space-between; padding: 14px; background: #12121a; border-radius: 10px; margin-bottom: 10px; align-items: center; gap: 10px; }
 
-/* PROFILE DISPLAY - 3 squares */
-.profile-display { display: flex; align-items: flex-end; gap: 8px; margin: 10px 0; }
-.profile-display .main-avatar { width: 64px; height: 64px; background: linear-gradient(135deg, #a855f7, #7c3aed); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 24px; border: 3px solid #a855f7; }
-.profile-display .sub-avatar { width: 40px; height: 40px; background: #1e1e2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 14px; border: 2px solid #2e2e3e; }
-
-/* ADMIN */
 .admin-tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; border-bottom: 1px solid #1e1e2e; padding-bottom: 15px; }
 .admin-tab { background: #12121a; color: #94a3b8; border: 1px solid #1e1e2e; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
 .admin-tab:hover { background: #1e1e2e; color: #fff; }
@@ -188,3 +180,35 @@ a:hover { color: #c084fc; }
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: #0a0a0f; }
 ::-webkit-scrollbar-thumb { background: #2e2e3e; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3e3e4e; }/* Sohbet Bildirimleri (Giriş/Çıkış) */
+.chat-notification {
+  background: rgba(16, 185, 129, 0.1);
+  border-left: 3px solid #10b981;
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 600;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.chat-msg-item {
+  padding: 6px 0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.chat-msg-item:last-child {
+  border-bottom: none;
+}

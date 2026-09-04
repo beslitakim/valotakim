@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VALOTAKIM - Valorant Oyuncu Eşleştirme</title>
+  <title>VALOTAKIM - 5'li Takım Bul</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
@@ -11,7 +11,9 @@
 
 <nav class="navbar">
   <div class="nav-container">
-    <div class="logo" onclick="switchPage('home')">VALO<span class="logo-accent">TAKIM</span></div>
+    <div class="logo" onclick="switchPage('home')">
+      <img src="/images/logo.png" alt="5'li Takım" class="logo-img">
+    </div>
     <div class="nav-links" id="nav-links">
       <button class="nav-btn" onclick="switchPage('home')">Ana Sayfa</button>
       <button class="nav-btn" onclick="switchPage('rooms')">İlanlar</button>
@@ -29,21 +31,21 @@
 
 <div id="page-home" class="page active">
   <div class="hero-section">
-    <div class="hero-badge">🎮 TROLLERDEN KURTUL • KARA LİSTEYE EKLE</div>
-    <h1 class="hero-title">TAKIMINI BUL!</h1>
-    <h2 class="hero-subtitle">OYUNA GİR!<br>KEYİFLE KAZAN!</h2>
+    <div class="hero-badge" id="hero-badge">🎮 TROLLERDEN KURTUL • KARA LİSTEYE EKLE</div>
+    <h1 class="hero-title" id="hero-title">TAKIMINI BUL!</h1>
+    <h2 class="hero-subtitle" id="hero-subtitle">OYUNA GİR!<br>KEYİFLE KAZAN!</h2>
     <p class="hero-desc">Tek oyuncu ara veya birbirini tanımayan 5 oyuncuyla yeni bir takım oluştur. Rank bazlı akıllı eşleştirme ile tam sana göre takım!</p>
     <div class="hero-buttons">
       <button class="btn-hero btn-hero-primary" onclick="switchPage('rooms')">🔍 1 Kişi Lazım</button>
       <button class="btn-hero btn-hero-outline" onclick="switchPage('matchmaking')">⚡ 5'li Takım Bul</button>
     </div>
     <div class="hero-footer-box">
-      Bu uygulama <a href="https://www.youtube.com/@SmokGG01" target="_blank" class="smokgg-link">SMOKGG</a> YouTube Kanalı aboneleri için özel olarak yapılmıştır.
+      Bu uygulama <a href="#" id="youtube-link" class="smokgg-link" target="_blank">SMOKGG</a> YouTube Kanalı aboneleri için özel olarak yapılmıştır.
     </div>
   </div>
+
   <div class="giveaway-banner">
-    <div class="giveaway-icon">🎁</div>
-    <h2>30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
+    <h2 id="giveaway-title">30 EYLÜL 2026 - 825 VK ÇEKİLİŞİ</h2>
     <p>Sisteme kayıt ol, puan topla ve ödülü kazanma şansını yakala!</p>
     <button class="btn-hero btn-hero-primary" style="margin-top:15px;" onclick="switchPage('giveaway')">🎯 Çekilişe Git</button>
     <div id="home-giveaway-participants" class="giveaway-mini-list"></div>
@@ -94,7 +96,7 @@
       </select>
     </div>
     <div class="form-group">
-      <label>En İyi 3 Ajanın (Eşleşmede çakışma olmaz)</label>
+      <label>En İyi 3 Ajanın</label>
       <div id="prof-agent-picker" class="agent-picker-grid"></div>
     </div>
     <button class="btn-hero btn-hero-primary btn-full" onclick="updateProfile()">Bilgileri Güncelle</button>
@@ -102,7 +104,7 @@
 </div>
 
 <div id="page-login" class="page">
-  <div class="page-header"><h2>🔐 Giriş Yap</h2></div>
+  <div class="page-header"><h2> Giriş Yap</h2></div>
   <div class="form-card">
     <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="login-user"></div>
     <div class="form-group"><label>Şifre</label><input type="password" id="login-pass"></div>
@@ -131,7 +133,7 @@
     </div>
     <div class="form-group"><label>Şifre</label><input type="password" id="reg-pass"></div>
     <div class="form-group"><label>Şifre (Tekrar)</label><input type="password" id="reg-pass2"></div>
-    <button class="btn-hero btn-hero-primary btn-full" onclick="register()">Hesap Oluştur</button>
+    <button class="btn-hero btn-hero-primary btn-full" onclick="register()">Hesap Oluştur (100 Puan Hediye!)</button>
   </div>
 </div>
 
@@ -177,16 +179,16 @@
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchAdminTab('dashboard')">📊 Dashboard</button>
     <button class="admin-tab" onclick="switchAdminTab('users')">👥 Kullanıcılar</button>
-    <button class="admin-tab" onclick="switchAdminTab('codes')">🎟️ Kod Yönetimi</button>
+    <button class="admin-tab" onclick="switchAdminTab('codes')">️ Kod Yönetimi</button>
     <button class="admin-tab" onclick="switchAdminTab('ads')">📢 Reklamlar</button>
-    <button class="admin-tab" onclick="switchAdminTab('settings')">️ Site Ayarları</button>
+    <button class="admin-tab" onclick="switchAdminTab('settings')">⚙️ Site Ayarları</button>
   </div>
   <div id="admin-tab-dashboard" class="admin-tab-content active">
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-users">0</div><div class="stat-label">Toplam Kullanıcı</div></div>
-      <div class="stat-card"><div class="stat-icon"></div><div class="stat-value" id="stat-rooms">0</div><div class="stat-label">Aktif İlan</div></div>
+      <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="stat-rooms">0</div><div class="stat-label">Aktif İlan</div></div>
       <div class="stat-card"><div class="stat-icon">🎟️</div><div class="stat-value" id="stat-participants">0</div><div class="stat-label">Çekiliş Katılımcısı</div></div>
-      <div class="stat-card"><div class="stat-icon">🚫</div><div class="stat-value" id="stat-banned">0</div><div class="stat-label">Banlı Kullanıcı</div></div>
+      <div class="stat-card"><div class="stat-icon"></div><div class="stat-value" id="stat-banned">0</div><div class="stat-label">Banlı Kullanıcı</div></div>
     </div>
     <div class="admin-grid-2">
       <div class="admin-panel-box"><h3>🆕 Son Kayıt Olanlar</h3><div id="recent-users-list"></div></div>
@@ -222,8 +224,7 @@
   <div id="admin-tab-settings" class="admin-tab-content">
     <div class="admin-panel-box">
       <h3>🏠 Ana Sayfa Ayarları</h3>
-      <div class="form-group" style="margin-top:15px;"><label>Site Başlığı</label><input type="text" id="set-site-title" placeholder="VALOTAKIM"></div>
-      <div class="form-group"><label>Hero Badge</label><input type="text" id="set-hero-badge"></div>
+      <div class="form-group" style="margin-top:15px;"><label>Hero Badge</label><input type="text" id="set-hero-badge"></div>
       <div class="form-group"><label>Hero Başlık</label><input type="text" id="set-hero-title"></div>
       <div class="form-group"><label>Hero Alt Başlık</label><input type="text" id="set-hero-subtitle"></div>
     </div>
@@ -231,16 +232,15 @@
   </div>
 </div>
 
-<!-- CREATE ROOM MODAL -->
 <div id="create-room-modal" class="modal">
   <div class="modal-content">
     <h2>📝 Yeni İlan Oluştur</h2>
     <div class="form-group"><label>Kaç Kişi Lazım?</label>
       <select id="room-team-size">
-        <option value="2">2 Kişi Lazım (1 Kişi + 1)</option>
-        <option value="3">3 Kişi Lazım (1 Kişi + 2)</option>
-        <option value="4">4 Kişi Lazım (1 Kişi + 3)</option>
-        <option value="5" selected>5 Kişi Lazım (1 Kişi + 4)</option>
+        <option value="2">2 Kişi Lazım</option>
+        <option value="3">3 Kişi Lazım</option>
+        <option value="4">4 Kişi Lazım</option>
+        <option value="5" selected>5 Kişi Lazım</option>
       </select>
     </div>
     <div class="form-group"><label>Ajan Seçimi (En Fazla 3)</label><div id="agent-picker" class="agent-picker-grid"></div></div>

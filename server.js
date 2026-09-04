@@ -16,6 +16,7 @@ app.use(express.static(path.join(__dirname)));
 const db = new Database('valotakim.db');
 db.pragma('journal_mode = WAL');
 
+// YENİ SÜTUNLAR EKLENDİ: favorite_agents, points, tickets, team_size, is_ready
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,6 +26,8 @@ db.exec(`
     rank TEXT,
     role TEXT,
     favorite_agents TEXT DEFAULT '[]',
+    points INTEGER DEFAULT 100,
+    tickets INTEGER DEFAULT 1,
     is_admin INTEGER DEFAULT 0,
     is_banned INTEGER DEFAULT 0,
     ban_reason TEXT,
@@ -64,7 +67,42 @@ db.exec(`
     user_id INTEGER PRIMARY KEY,
     joined_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS promo_codes (
+    code TEXT PRIMARY KEY,
+    max_uses INTEGER,
+    current_uses INTEGER DEFAULT 0,
+    points_reward INTEGER DEFAULT 100,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS ads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    url TEXT,
+    image_url TEXT,
+    is_active INTEGER DEFAULT 1,
+    clicks INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS site_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
 `);
+
+const defaultSettings = [
+  { key: 'hero_badge', value: '🎮 TROLLERDEN KURTUL • KARA LİSTEYE EKLE' },
+  { key: 'hero_title', value: 'TAKIMINI BUL!' },
+  { key: 'hero_subtitle', value: 'OYUNA GİR!<br>KEYİFLE KAZAN!' },
+  { key: 'giveaway_date', value: '30 EYLÜL 2026' },
+  { key: 'giveaway_prize', value: '825 VK' },
+  { key: 'youtube_channel', value: 'SMOKGG' },
+  { key: 'youtube_url', value: 'https://www.youtube.com/@SmokGG01' }
+];
+defaultSettings.forEach(s => {
+  db.prepare("INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)").run(s.key, s.value);
+});
+
+db.prepare("INSERT OR IGNORE INTO promo_codes (code, max_uses, points_reward) VALUES ('SMOKGG100', 50, 100)").run();
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -83,6 +121,13 @@ function adminOnly(req, res, next) {
   next();
 }
 
+app.get('/api/settings', (req, res) => {
+  const settings = db.prepare('SELECT key, value FROM site_settings').all();
+  const obj = {};
+  settings.forEach(s => { obj[s.key] = s.value; });
+  res.json({ success: true, settings: obj });
+});
+
 app.post('/api/register', (req, res) => {
   const { username, valName, valTag, rank, role, password, passwordConfirm } = req.body;
   if (!username || !valName || !valTag || !password) return res.json({ success: false, message: 'Tüm alanları doldurun!' });
@@ -93,7 +138,7 @@ app.post('/api/register', (req, res) => {
   const valorant_id = `${valName}#${valTag}`;
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
   const isAdmin = userCount === 0 ? 1 : 0;
-  const stmt = db.prepare('INSERT INTO users (username, password, valorant_id, rank, role, is_admin) VALUES (?, ?, ?, ?, ?, ?)');
+  const stmt = db.prepare('INSERT INTO users (username, password, valorant_id, rank, role, is_admin, points, tickets) VALUES (?, ?, ?, ?, ?, ?, 100, 1)');
   stmt.run(username, hashedPassword, valorant_id, rank, role, isAdmin);
   res.json({ success: true, username, message: 'Kayıt başarılı' });
 });
@@ -104,11 +149,11 @@ app.post('/api/login', (req, res) => {
   if (!user || !bcrypt.compareSync(password, user.password)) return res.json({ success: false, message: 'Kullanıcı adı veya şifre hatalı!' });
   if (user.is_banned) return res.json({ success: false, message: `Hesabınız banlanmış. Sebep: ${user.ban_reason || 'Belirtilmemiş'}` });
   const token = jwt.sign({ id: user.id, username: user.username, is_admin: user.is_admin }, JWT_SECRET, { expiresIn: '7d' });
-  res.json({ success: true, token, user: { id: user.id, username: user.username, is_admin: user.is_admin } });
+  res.json({ success: true, token, user: { id: user.id, username: user.username, is_admin: user.is_admin, points: user.points, tickets: user.tickets } });
 });
 
 app.get('/api/profile', authenticateToken, (req, res) => {
-  const user = db.prepare('SELECT id, username, valorant_id, rank, role, favorite_agents, is_admin FROM users WHERE id = ?').get(req.user.id);
+  const user = db.prepare('SELECT id, username, valorant_id, rank, role, favorite_agents, is_admin, points, tickets FROM users WHERE id = ?').get(req.user.id);
   if (!user) return res.json({ success: false, message: 'Kullanıcı bulunamadı' });
   res.json({ success: true, user });
 });
@@ -129,13 +174,12 @@ app.get('/api/rooms', (req, res) => {
       FROM room_participants rp JOIN users u ON rp.user_id = u.id WHERE rp.room_id = ?`).all(room.id);
     const messages = db.prepare(`SELECT rm.id, rm.message, rm.created_at, u.username as sender
       FROM room_messages rm JOIN users u ON rm.user_id = u.id WHERE rm.room_id = ? ORDER BY rm.created_at ASC`).all(room.id);
-    const owner = db.prepare('SELECT favorite_agents FROM users WHERE id = ?').get(room.user_id);
     return {
       ...room,
       participants,
       messages,
       agents: room.agents ? JSON.parse(room.agents) : [],
-      owner_favorite_agents: owner ? JSON.parse(owner.favorite_agents || '[]') : []
+      owner_favorite_agents: room.owner_favorite_agents ? JSON.parse(room.owner_favorite_agents) : []
     };
   });
   res.json({ success: true, rooms: formattedRooms });
@@ -157,6 +201,12 @@ app.post('/api/rooms/:id/join', authenticateToken, (req, res) => {
   if (count >= room.team_size - 1) return res.json({ success: false, message: 'Oda dolu!' });
   try {
     db.prepare('INSERT INTO room_participants (room_id, user_id) VALUES (?, ?)').run(roomId, req.user.id);
+    
+    // Odaya katılma bildirimi ekle
+    const user = db.prepare('SELECT username FROM users WHERE id = ?').get(req.user.id);
+    db.prepare('INSERT INTO room_messages (room_id, user_id, message) VALUES (?, ?, ?)')
+      .run(roomId, req.user.id, `🟢 ${user.username} odaya katıldı.`);
+    
     res.json({ success: true });
   } catch (e) {
     res.json({ success: false, message: 'Zaten katılmışsınız!' });
@@ -164,7 +214,14 @@ app.post('/api/rooms/:id/join', authenticateToken, (req, res) => {
 });
 
 app.post('/api/rooms/:id/leave', authenticateToken, (req, res) => {
-  db.prepare('DELETE FROM room_participants WHERE room_id = ? AND user_id = ?').run(req.params.id, req.user.id);
+  const roomId = req.params.id;
+  
+  // Kullanıcının odadan çıktığını bildir
+  const user = db.prepare('SELECT username FROM users WHERE id = ?').get(req.user.id);
+  db.prepare('INSERT INTO room_messages (room_id, user_id, message) VALUES (?, ?, ?)')
+    .run(roomId, req.user.id, ` ${user.username} odadan ayrıldı.`);
+  
+  db.prepare('DELETE FROM room_participants WHERE room_id = ? AND user_id = ?').run(roomId, req.user.id);
   res.json({ success: true });
 });
 
@@ -172,12 +229,7 @@ app.post('/api/rooms/:id/ready', authenticateToken, (req, res) => {
   const { is_ready } = req.body;
   db.prepare('UPDATE room_participants SET is_ready = ? WHERE room_id = ? AND user_id = ?')
     .run(is_ready ? 1 : 0, req.params.id, req.user.id);
-  const participants = db.prepare(`SELECT rp.is_ready, u.username, u.valorant_id, u.favorite_agents
-    FROM room_participants rp JOIN users u ON rp.user_id = u.id WHERE rp.room_id = ?`).all(req.params.id);
-  const owner = db.prepare('SELECT username, valorant_id, favorite_agents FROM users WHERE id = ?').get(
-    db.prepare('SELECT user_id FROM rooms WHERE id = ?').get(req.params.id).user_id
-  );
-  res.json({ success: true, participants, owner });
+  res.json({ success: true });
 });
 
 app.delete('/api/rooms/:id', authenticateToken, (req, res) => {
@@ -218,7 +270,7 @@ app.post('/api/matchmaking/join', authenticateToken, (req, res) => {
     }
 
     const expires_at = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-    const roomStmt = db.prepare("INSERT INTO rooms (user_id, mode, age, description, agents, microphone, team_size, expires_at) VALUES (?, 'Otomatik', 'Farketmez', 'Otomatik eşleşme ile oluşturulan 5\'li takım', '[]', 1, 5, ?)");
+    const roomStmt = db.prepare("INSERT INTO rooms (user_id, mode, age, description, agents, microphone, team_size, expires_at) VALUES (?, 'Otomatik', 'Farketmez', 'Otomatik eşleşme', '[]', 1, 5, ?)");
     const result = roomStmt.run(team[0].user_id, expires_at);
     const roomId = result.lastInsertRowid;
 
@@ -239,27 +291,44 @@ app.get('/api/giveaway', (req, res) => {
 });
 
 app.post('/api/giveaway/join', authenticateToken, (req, res) => {
+  const user = db.prepare('SELECT points, tickets FROM users WHERE id = ?').get(req.user.id);
+  if (user.points < 100) return res.json({ success: false, message: 'Yetersiz puan! 100 SmokGG Puanı gerekli.' });
   try {
+    db.prepare('UPDATE users SET points = points - 100, tickets = tickets + 1 WHERE id = ?').run(req.user.id);
     db.prepare('INSERT INTO giveaway_participants (user_id) VALUES (?)').run(req.user.id);
-    res.json({ success: true });
+    res.json({ success: true, message: '✅ 100 Puan harcanarak 1 Bilet kazandınız!' });
   } catch (e) {
-    res.json({ success: false, message: 'Zaten katıldınız!' });
+    res.json({ success: false, message: 'Zaten çekilişe katılmışsınız!' });
   }
 });
 
-app.get('/api/admin/rooms', authenticateToken, adminOnly, (req, res) => {
-  const rooms = db.prepare(`SELECT r.*, u.username, (SELECT COUNT(*) FROM room_participants WHERE room_id = r.id) as participant_count
-    FROM rooms r JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC`).all();
-  res.json({ success: true, rooms });
+app.post('/api/giveaway/watch-ad', authenticateToken, (req, res) => {
+  db.prepare('UPDATE users SET points = points + 50 WHERE id = ?').run(req.user.id);
+  res.json({ success: true, message: '✅ +50 SmokGG Puanı kazandınız!' });
 });
 
-app.delete('/api/admin/rooms/:id', authenticateToken, adminOnly, (req, res) => {
-  db.prepare('DELETE FROM rooms WHERE id = ?').run(req.params.id);
-  res.json({ success: true });
+app.post('/api/giveaway/redeem-code', authenticateToken, (req, res) => {
+  const { code } = req.body;
+  const promo = db.prepare('SELECT * FROM promo_codes WHERE code = ?').get(code);
+  if (!promo) return res.json({ success: false, message: '❌ Geçersiz kod!' });
+  if (promo.current_uses >= promo.max_uses) return res.json({ success: false, message: '❌ Bu kodun kullanım kotası doldu.' });
+  db.prepare('UPDATE promo_codes SET current_uses = current_uses + 1 WHERE code = ?').run(code);
+  db.prepare('UPDATE users SET points = points + ? WHERE id = ?').run(promo.points_reward, req.user.id);
+  res.json({ success: true, message: `✅ +${promo.points_reward} Puan kazandınız! (Kalan: ${promo.max_uses - promo.current_uses - 1})` });
+});
+
+app.get('/api/admin/dashboard', authenticateToken, adminOnly, (req, res) => {
+  const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+  const totalRooms = db.prepare("SELECT COUNT(*) as count FROM rooms WHERE expires_at > datetime('now')").get().count;
+  const totalParticipants = db.prepare('SELECT COUNT(*) as count FROM giveaway_participants').get().count;
+  const bannedUsers = db.prepare('SELECT COUNT(*) as count FROM users WHERE is_banned = 1').get().count;
+  const recentUsers = db.prepare('SELECT id, username, valorant_id, rank, created_at FROM users ORDER BY created_at DESC LIMIT 5').all();
+  const recentRooms = db.prepare('SELECT r.id, r.mode, u.username, r.created_at FROM rooms r JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC LIMIT 5').all();
+  res.json({ success: true, stats: { totalUsers, totalRooms, totalParticipants, bannedUsers }, recentUsers, recentRooms });
 });
 
 app.get('/api/admin/users', authenticateToken, adminOnly, (req, res) => {
-  const users = db.prepare('SELECT id, username, valorant_id, rank, role, is_admin, is_banned, ban_reason FROM users').all();
+  const users = db.prepare('SELECT id, username, valorant_id, rank, role, is_admin, is_banned, ban_reason, points, tickets FROM users ORDER BY created_at DESC').all();
   res.json({ success: true, users });
 });
 
@@ -277,6 +346,80 @@ app.post('/api/admin/users/:id/unban', authenticateToken, adminOnly, (req, res) 
 app.post('/api/admin/users/:id/toggle-admin', authenticateToken, adminOnly, (req, res) => {
   db.prepare('UPDATE users SET is_admin = CASE WHEN is_admin = 1 THEN 0 ELSE 1 END WHERE id = ?').run(req.params.id);
   res.json({ success: true });
+});
+
+app.delete('/api/admin/users/:id', authenticateToken, adminOnly, (req, res) => {
+  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+app.get('/api/admin/rooms', authenticateToken, adminOnly, (req, res) => {
+  const rooms = db.prepare(`SELECT r.*, u.username, (SELECT COUNT(*) FROM room_participants WHERE room_id = r.id) as participant_count FROM rooms r JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC`).all();
+  res.json({ success: true, rooms });
+});
+
+app.delete('/api/admin/rooms/:id', authenticateToken, adminOnly, (req, res) => {
+  db.prepare('DELETE FROM rooms WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+app.get('/api/admin/promo-codes', authenticateToken, adminOnly, (req, res) => {
+  const codes = db.prepare('SELECT * FROM promo_codes ORDER BY created_at DESC').all();
+  res.json({ success: true, codes });
+});
+
+app.post('/api/admin/promo-codes', authenticateToken, adminOnly, (req, res) => {
+  const { code, max_uses, points_reward } = req.body;
+  if (!code || !max_uses) return res.json({ success: false, message: 'Kod ve maksimum kullanım gerekli!' });
+  try {
+    db.prepare('INSERT INTO promo_codes (code, max_uses, points_reward) VALUES (?, ?, ?)').run(code.toUpperCase(), max_uses, points_reward || 100);
+    res.json({ success: true, message: 'Kod oluşturuldu!' });
+  } catch (e) {
+    res.json({ success: false, message: 'Bu kod zaten mevcut!' });
+  }
+});
+
+app.delete('/api/admin/promo-codes/:code', authenticateToken, adminOnly, (req, res) => {
+  db.prepare('DELETE FROM promo_codes WHERE code = ?').run(req.params.code);
+  res.json({ success: true });
+});
+
+app.get('/api/admin/ads', authenticateToken, adminOnly, (req, res) => {
+  const ads = db.prepare('SELECT * FROM ads ORDER BY created_at DESC').all();
+  res.json({ success: true, ads });
+});
+
+app.post('/api/admin/ads', authenticateToken, adminOnly, (req, res) => {
+  const { title, url, image_url } = req.body;
+  if (!title || !url) return res.json({ success: false, message: 'Başlık ve URL gerekli!' });
+  const stmt = db.prepare('INSERT INTO ads (title, url, image_url) VALUES (?, ?, ?)');
+  const result = stmt.run(title, url, image_url || '');
+  res.json({ success: true, id: result.lastInsertRowid });
+});
+
+app.put('/api/admin/ads/:id', authenticateToken, adminOnly, (req, res) => {
+  const { title, url, image_url, is_active } = req.body;
+  db.prepare('UPDATE ads SET title = ?, url = ?, image_url = ?, is_active = ? WHERE id = ?').run(title, url, image_url || '', is_active ? 1 : 0, req.params.id);
+  res.json({ success: true });
+});
+
+app.delete('/api/admin/ads/:id', authenticateToken, adminOnly, (req, res) => {
+  db.prepare('DELETE FROM ads WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+app.get('/api/admin/settings', authenticateToken, adminOnly, (req, res) => {
+  const settings = db.prepare('SELECT key, value FROM site_settings').all();
+  const obj = {};
+  settings.forEach(s => { obj[s.key] = s.value; });
+  res.json({ success: true, settings: obj });
+});
+
+app.post('/api/admin/settings/bulk', authenticateToken, adminOnly, (req, res) => {
+  const settings = req.body;
+  const stmt = db.prepare('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)');
+  Object.entries(settings).forEach(([key, value]) => { stmt.run(key, value); });
+  res.json({ success: true, message: 'Tüm ayarlar güncellendi!' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
